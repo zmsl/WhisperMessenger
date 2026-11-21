@@ -1,9 +1,10 @@
--- The edge handle: a thin tab on the screen edge that opens the closed window,
--- styled like the window and badged with the unread whisper count.
+-- The edge handle: a small icon tab on the screen edge that opens the closed
+-- window, styled like the window and badged with the unread whisper count.
 local AnimatedFactory = require("tests.helpers.animated_factory")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local ScreenEdgeSurface = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeSurface")
 local Theme = require("WhisperMessenger.UI.Theme")
+local FindUI = require("tests.helpers.find_ui")
 
 local function build(settings)
   local factory = AnimatedFactory.newAnimatedFactory()
@@ -59,7 +60,7 @@ return function()
     local frame = surface.handle.frame
     local p = frame.point
     assert(p[1] == "LEFT" and p[2] == parent and p[3] == "LEFT", "anchored LEFT to the parent's LEFT")
-    assert(frame.width == 12 and frame.height == 96, "12 x 96, got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
+    assert(frame.width == 30 and frame.height == 44, "30 x 44, got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
     assert(frame.frameStrata == "MEDIUM", "medium strata")
     assert(frame.mouseEnabled == true, "the handle takes the mouse")
   end
@@ -74,11 +75,46 @@ return function()
 
   local function test_badge_shows_unread_whispers_and_hides_at_zero()
     local surface = build()
+    local badge = surface.handle.badge
+    assert(badge.outline ~= nil, "the shared badge, outlined")
     surface.setUnreadCount(4, 3)
-    assert(surface.handle.badge:GetText() == "3", "badge shows whispers, got " .. tostring(surface.handle.badge:GetText()))
-    assert(surface.handle.badge:IsShown(), "badge shown")
+    assert(badge.label:GetText() == "3", "badge shows whispers, got " .. tostring(badge.label:GetText()))
+    assert(badge.frame:IsShown(), "badge shown")
+    surface.setUnreadCount(200, 150)
+    assert(badge.label:GetText() == "99+", "three digits cap at 99+, got " .. tostring(badge.label:GetText()))
     surface.setUnreadCount(2, 0)
-    assert(not surface.handle.badge:IsShown(), "badge hidden at zero whispers")
+    assert(not badge.frame:IsShown(), "badge hidden at zero whispers")
+  end
+
+  local function test_badge_sits_on_the_inner_top_corner()
+    local surface, state = build()
+    local handle = surface.handle
+    local p = handle.badge.frame.point
+    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "TOPRIGHT", "left edge: inner corner is top-right, got " .. tostring(p[3]))
+    state.side = "right"
+    surface.refresh()
+    p = handle.badge.frame.point
+    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "TOPLEFT", "right edge: inner corner is top-left, got " .. tostring(p[3]))
+  end
+
+  local function test_chat_icon_in_the_accent_colour()
+    local surface = build()
+    local icon = surface.handle.icon
+    assert(icon.texturePath == Theme.TEXTURES.nav_whispers_icon, "the chat bubble icon")
+    assert(icon.width == 18 and icon.height == 18, "18 px")
+    assert(icon.vertexColor[1] == Theme.COLORS.accent[1] and icon.vertexColor[3] == Theme.COLORS.accent[3], "accent tint")
+  end
+
+  local function test_no_blizzard_atlas()
+    for _, style in ipairs({ "off", "classic", "retail" }) do
+      Hud.Configure(style)
+      local surface = build()
+      local found = FindUI.find(surface.handle.frame, function(node)
+        return node.atlas ~= nil
+      end)
+      assert(found == nil, style .. ": no atlas on the handle")
+    end
+    Hud.Configure("off")
   end
 
   local function test_click_runs_the_toggle()
@@ -98,16 +134,16 @@ return function()
     assert(border.left:IsShown() == true and border.right:IsShown() == false, "right handle hides its right edge")
   end
 
-  local function test_hud_style_uses_the_window_side_tile()
+  local function test_hud_style_has_a_2px_accent_rim_on_three_sides()
     Hud.Configure("classic")
     local surface, state = build()
-    local tile = surface.handle.tile
-    assert(tile.atlas == "!UI-Frame-RightTile", "left handle uses the right tile, got " .. tostring(tile.atlas))
-    assert(tile:IsShown(), "tile shown in HUD style")
-    assert(surface.handle.border.top:IsShown() == false, "no custom border in HUD style")
+    local border = surface.handle.border
+    assert(border.top.height == 2 and border.right.width == 2, "2 px rim")
+    assert(border.top.color[1] == Theme.COLORS.accent[1] and border.top.color[3] == Theme.COLORS.accent[3], "accent rim")
+    assert(border.left:IsShown() == false and border.right:IsShown() and border.top:IsShown() and border.bottom:IsShown(), "screen side open")
     state.side = "right"
     surface.refresh()
-    assert(tile.atlas == "!UI-Frame-LeftTile", "right handle uses the left tile, got " .. tostring(tile.atlas))
+    assert(border.left:IsShown() and border.right:IsShown() == false, "right handle opens its right side")
     Hud.Configure("off")
   end
 
@@ -121,6 +157,9 @@ return function()
   test_badge_shows_unread_whispers_and_hides_at_zero()
   test_click_runs_the_toggle()
   test_custom_style_hides_the_screen_side_edge()
-  test_hud_style_uses_the_window_side_tile()
+  test_hud_style_has_a_2px_accent_rim_on_three_sides()
+  test_badge_sits_on_the_inner_top_corner()
+  test_chat_icon_in_the_accent_colour()
+  test_no_blizzard_atlas()
   Hud.Configure("off")
 end
