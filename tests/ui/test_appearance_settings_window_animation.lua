@@ -59,12 +59,12 @@ return function()
     assert(saved ~= nil and saved.value == true, "the default is on")
   end
 
-  -- test_the_animation_row_sits_below_the_compact_toggle
+  -- test_the_animation_row_sits_below_the_edge_handle_toggle
   do
     local result = create()
-    local compactMode = FindUI.byLabel(result.frame, "Compact window")
+    local edgeHandle = FindUI.byLabel(result.frame, "Edge handle")
     local animation = FindUI.byLabel(result.frame, LABEL)
-    assert(select(2, animation:GetPoint()) == compactMode, "anchored under the compact toggle")
+    assert(select(2, animation:GetPoint()) == edgeHandle, "anchored under the Edge handle toggle")
   end
 
   -- test_the_animation_label_survives_a_language_refresh

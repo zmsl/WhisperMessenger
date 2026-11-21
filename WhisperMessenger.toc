@@ -583,6 +583,7 @@ Core/Bootstrap/WindowRuntime/LiveThemeSync.lua
 Core/Bootstrap/WindowRuntime/GrowSource.lua
 Core/Bootstrap/WindowRuntime/IconMode.lua
 Core/Bootstrap/WindowRuntime/Surfaces.lua
+Core/Bootstrap/WindowRuntime/ScreenEdgeSetting.lua
 Core/Bootstrap/WindowRuntime/WindowBuilder.lua
 Core/Bootstrap/WindowRuntime/WindowActions.lua
 Core/Bootstrap/WindowRuntime/Flows.lua

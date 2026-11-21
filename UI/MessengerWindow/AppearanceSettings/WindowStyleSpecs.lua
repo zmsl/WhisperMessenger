@@ -21,6 +21,36 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     anchorOffsetY = gap,
   }
 
+  local edgeGlowSpec = {
+    key = "edgeGlow",
+    label = text("Edge glow"),
+    labelKey = "Edge glow",
+    initial = config.edgeGlow ~= false,
+    onChange = function(value)
+      onChange("edgeGlow", value)
+    end,
+    tooltipLines = {
+      text("Edge glow"),
+      text("While the window is closed, the screen edge glows softly when you have unread whispers. Only while Screen edge is on."),
+    },
+  }
+
+  local edgeHandleSpec = {
+    key = "edgeHandle",
+    label = text("Edge handle"),
+    labelKey = "Edge handle",
+    initial = config.edgeHandle ~= false,
+    onChange = function(value)
+      onChange("edgeHandle", value)
+    end,
+    tooltipLines = {
+      text("Edge handle"),
+      text(
+        "While the window is closed, a small tab on the screen edge shows your unread count. Click it to open the window. Only while Screen edge is on."
+      ),
+    },
+  }
+
   local windowAnimationSpec = {
     key = "windowAnimation",
     label = text("Window animation"),
@@ -81,7 +111,7 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { compactLayoutSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
+  return { compactLayoutSpec, edgeGlowSpec, edgeHandleSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

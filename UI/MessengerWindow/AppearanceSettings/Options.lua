@@ -40,6 +40,20 @@ local HUD_STYLE_SPECS = {
   { key = "retail", label = "Modern", tooltip = "Uses the modern game window style. Requires /reload to apply." },
 }
 
+local SCREEN_EDGE_SPECS = {
+  { key = "off", label = "Off", tooltip = "The compact window stays where you move it." },
+  {
+    key = "left",
+    label = "Left",
+    tooltip = "Holds the compact window against this edge of the screen at full height. It slides out when it opens and back in when it closes. Only while Compact window is on.",
+  },
+  {
+    key = "right",
+    label = "Right",
+    tooltip = "Holds the compact window against this edge of the screen at full height. It slides out when it opens and back in when it closes. Only while Compact window is on.",
+  },
+}
+
 local BUBBLE_COLOR_LABELS = {
   default = { label = "Default", tooltip = "Uses your theme's bubble colors." },
   shadow = { label = "Shadow", tooltip = "Muted dark tones." },
@@ -103,6 +117,10 @@ function Options.BuildHudStyleOptions()
     end
   end
   return options
+end
+
+function Options.BuildScreenEdgeOptions()
+  return localizeOptionSpecs(SCREEN_EDGE_SPECS)
 end
 
 function Options.BuildThemePresetOptions()

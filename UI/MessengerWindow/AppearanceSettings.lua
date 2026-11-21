@@ -34,6 +34,9 @@ local DEFAULTS = {
   bubbleColorPreset = "default",
   windowScale = 1.0,
   compactLayout = false,
+  screenEdge = "off",
+  edgeGlow = true,
+  edgeHandle = true,
   windowAnimation = true,
   iconDock = true,
   openAtSavedSpot = true,
@@ -110,6 +113,17 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local windowStyleSpecs = WindowStyleSpecs.Build(config, onChange, text, gap)
   local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
   SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
+
+  -- Sits between Compact window and the glow and handle toggles.
+  local screenEdgeSelector = panel:bind(
+    sel(text("Screen edge"), Options.BuildScreenEdgeOptions(), DEFAULTS.screenEdge, config.screenEdge or DEFAULTS.screenEdge, function(v)
+      onChange("screenEdge", v)
+    end),
+    { type = "selector", key = "screenEdge", default = DEFAULTS.screenEdge }
+  )
+  screenEdgeSelector.row:SetPoint("TOPLEFT", windowStyleToggles[1].row, "BOTTOMLEFT", 0, gap)
+  windowStyleToggles[2].row:ClearAllPoints()
+  windowStyleToggles[2].row:SetPoint("TOPLEFT", screenEdgeSelector.row, "BOTTOMLEFT", 0, gap)
 
   local themePresetSelector = panel:bind(
     sel(text("Theme Preset"), Options.BuildThemePresetOptions(), presetDefault, config.themePreset or presetDefault, function(v)
@@ -236,6 +250,8 @@ function AppearanceSettings.Create(factory, parent, config, options)
     hudStyleSelector.label:SetText(text("Native WoW HUD"))
     hudStyleSelector.setOptionsList(Options.BuildHudStyleOptions())
     SettingsControls.RelabelToggles(windowStyleToggles, windowStyleSpecs, text)
+    screenEdgeSelector.label:SetText(text("Screen edge"))
+    screenEdgeSelector.setOptionsList(Options.BuildScreenEdgeOptions())
     themePresetSelector.label:SetText(text("Theme Preset"))
     themePresetSelector.setOptionsList(Options.BuildThemePresetOptions())
     windowScaleRow.label:SetText(text("Window Scale"))

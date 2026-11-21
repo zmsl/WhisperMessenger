@@ -7,6 +7,7 @@ local SettingsHandler = ns.BootstrapWindowRuntimeSettingsHandler or require("Whi
 local DetachedPreviewRuntime = ns.BootstrapWindowRuntimeDetachedPreviewRuntime
   or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.DetachedPreviewRuntime")
 local GrowSource = ns.BootstrapWindowRuntimeGrowSource or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.GrowSource")
+local ScreenEdgeSetting = ns.BootstrapWindowRuntimeScreenEdgeSetting or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.ScreenEdgeSetting")
 local IconMode = ns.BootstrapWindowRuntimeIconMode or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconMode")
 local PanelPulse = ns.BootstrapWindowRuntimePanelPulse or require("WhisperMessenger.Core.Bootstrap.WindowRuntime.PanelPulse")
 local ChatCover = ns.BootstrapWindowCoordinatorChatCover or require("WhisperMessenger.Core.Bootstrap.WindowCoordinator.ChatCover")
@@ -37,6 +38,16 @@ local function createSettingsHandler(options, settingsState)
         accountState = options.accountState,
         ensureSurface = surfaces.ensureDetachedPreview,
         updateIconSurfaces = options.coordinator.updateIconSurfaces,
+      }, key, value)
+    end,
+    onScreenEdgeSetting = function(key, value)
+      ScreenEdgeSetting.Apply({
+        runtime = options.runtime,
+        ensureSurface = surfaces.ensureEdgeSurface,
+        updateIconSurfaces = options.coordinator.updateIconSurfaces,
+        readCompactSlot = function()
+          return options.positionSlots.read("compactWindow")
+        end,
       }, key, value)
     end,
   })
