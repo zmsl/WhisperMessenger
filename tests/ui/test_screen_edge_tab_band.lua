@@ -24,13 +24,13 @@ return function()
     assert(band.fill.color[1] == 0 and band.fill.alpha == 0.5, "darkened by a half-black fill")
   end
 
-  -- test_hud_band_has_a_2px_gold_divider_on_top
+  -- test_hud_band_has_the_inset_bevel_on_top
   do
     local band = build(true)
     band.show(32)
     local d = band.divider
-    assert(d:IsShown() and d.height == 2, "2 px")
-    assert(d.color[1] == Theme.COLORS.accent[1] and d.color[3] == Theme.COLORS.accent[3], "accent")
+    assert(d:IsShown() and d.height == 3, "3 px")
+    assert(d.atlas == "_UI-Frame-InnerBotTile", "the inset bottom bevel, got " .. tostring(d.atlas))
     assert(d.points[1][1] == "TOPLEFT" and d.points[1][2] == band.frame, "on the band's top")
   end
 

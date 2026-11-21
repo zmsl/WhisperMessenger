@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
 -- Hides the border pieces on the screen side and bottom of a window held
 -- against a screen edge, stretches its backgrounds to those edges and paints a
@@ -26,6 +27,10 @@ local CLASSIC_KEYS = {
   "InsetBorderBottom",
   "InsetBorderBottomLeft",
   "InsetBorderBottomRight",
+  -- The inset's top row: InsetBg reaches the frame top, the title divider replaces it.
+  "InsetBorderTop",
+  "InsetBorderTopLeft",
+  "InsetBorderTopRight",
   -- The title strip (also on ButtonFrameTemplate: TopTileStreaks).
   "TopBorder",
   "TitleBg",
@@ -48,7 +53,6 @@ local BACKGROUND_KEYS = { "Bg", "InsetBg" }
 local INNER_TILE_KEYS = { left = "RightBorder", right = "LeftBorder" }
 local INNER_EDGE_KEYS = { left = "RightEdge", right = "LeftEdge" }
 local CLOSE_INSET = 4
-local HUD_DIVIDER_ALPHA = 0.55
 
 local function collect(pieces, owner, keys, sideKeys)
   if type(owner) ~= "table" then
@@ -97,7 +101,8 @@ local function stretch(region, frame, side)
     if p[2] == frame and string.find(p[3], edge, 1, true) then
       x = 0
     end
-    if p[2] == frame and string.find(p[3], "BOTTOM", 1, true) then
+    -- Top too: the title art is hidden, so the background fills the header.
+    if p[2] == frame and (string.find(p[3], "BOTTOM", 1, true) or string.find(p[3], "TOP", 1, true)) then
       y = 0
     end
     region:SetPoint(p[1], p[2], p[3], x, y)
@@ -123,10 +128,11 @@ local function runFullHeight(region)
   return saved
 end
 
+-- Centred in the docked title row, inside the frame.
 local function moveCloseInside(button, frame)
   local saved = readPoints(button)
   button:ClearAllPoints()
-  button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CLOSE_INSET, -CLOSE_INSET)
+  button:SetPoint("RIGHT", frame, "TOPRIGHT", -CLOSE_INSET, -Theme.LAYOUT.SCREEN_EDGE_TITLE_ROW_HEIGHT / 2)
   return saved
 end
 
@@ -138,6 +144,7 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges, look)
   local movedPoints = {}
   local shade, shadeTexture
   local result = {}
+  local dividerIsLine = false
 
   local function move(region, mover)
     if region and region.GetNumPoints and region:GetNumPoints() > 0 then
@@ -154,15 +161,15 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges, look)
       divider = frame:CreateTexture(nil, "OVERLAY")
       divider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -look.titleHeight)
       divider:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -look.titleHeight)
-      divider:SetHeight(1)
       result.titleDivider = divider
+      -- Custom chrome, or a client without the atlas: a 1 px border line.
+      dividerIsLine = not (look.hud and NativeArt.SetBevel(divider, NativeArt.INSET_TOP_BEVEL))
+      if dividerIsLine then
+        divider:SetHeight(1)
+      end
     end
-    local colors = Theme.COLORS
-    if look.hud then
-      local accent = colors.accent
-      UIHelpers.applyColorTexture(divider, { accent[1], accent[2], accent[3], HUD_DIVIDER_ALPHA })
-    else
-      UIHelpers.applyColorTexture(divider, colors.window_border)
+    if dividerIsLine then
+      UIHelpers.applyColorTexture(divider, Theme.COLORS.window_border)
     end
     divider:Show()
   end

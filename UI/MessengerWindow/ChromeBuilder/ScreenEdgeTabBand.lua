@@ -5,6 +5,7 @@ end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
+local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
 -- The band at the bottom of a window held at a screen edge that the tab strip
 -- sits in: the window background darkened, a divider along its top, and room
@@ -12,9 +13,9 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local ScreenEdgeTabBand = {}
 
 local DARKEN = { 0, 0, 0, 0.5 }
-local HUD_DIVIDER = 2
 
--- look: hud (Native HUD divider: 2 px accent; else 1 px window border).
+-- look: hud (Native HUD divider: the inset bottom bevel; else, or on a client
+-- without that atlas, a 1 px window border line).
 function ScreenEdgeTabBand.Create(factory, frame, look)
   local L = Theme.LAYOUT
   local band = factory.CreateFrame("Frame", nil, frame)
@@ -27,7 +28,10 @@ function ScreenEdgeTabBand.Create(factory, frame, look)
   local divider = band:CreateTexture(nil, "BORDER")
   divider:SetPoint("TOPLEFT", band, "TOPLEFT", 0, 0)
   divider:SetPoint("TOPRIGHT", band, "TOPRIGHT", 0, 0)
-  divider:SetHeight(look.hud and HUD_DIVIDER or 1)
+  local dividerIsLine = not (look.hud and NativeArt.SetBevel(divider, NativeArt.INSET_BOTTOM_BEVEL))
+  if dividerIsLine then
+    divider:SetHeight(1)
+  end
   divider:Show()
 
   return {
@@ -39,7 +43,9 @@ function ScreenEdgeTabBand.Create(factory, frame, look)
       local height = L.SCREEN_EDGE_TAB_BAND_PAD_TOP + stripHeight + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
       band:SetHeight(height)
       UIHelpers.applyColorTexture(fill, DARKEN)
-      UIHelpers.applyColorTexture(divider, look.hud and Theme.COLORS.accent or Theme.COLORS.window_border)
+      if dividerIsLine then
+        UIHelpers.applyColorTexture(divider, Theme.COLORS.window_border)
+      end
       band:Show()
       return height
     end,

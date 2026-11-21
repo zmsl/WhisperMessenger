@@ -77,7 +77,8 @@ end
 -- edges. Retail's ButtonFrameTemplate and Classic's BasicFrameTemplateWithInset
 -- have different borders and title bars. screenEdge ("left"/"right", optional):
 -- the window is held against that screen edge, whose border and the bottom
--- border are hidden, so the content reaches both.
+-- border are hidden, so the content reaches both; it starts below the docked
+-- title row and its divider.
 function Hud.ContentInsets(layout, screenEdge)
   local insets
   if activeStyle == "retail" then
@@ -99,6 +100,8 @@ function Hud.ContentInsets(layout, screenEdge)
   if screenEdge == "left" or screenEdge == "right" then
     insets[screenEdge] = 0
     insets.bottom = 0
+    local titleRow = layout.SCREEN_EDGE_TITLE_ROW_HEIGHT + layout.SCREEN_EDGE_TITLE_GAP + layout.SCREEN_EDGE_DIVIDER_HEIGHT
+    insets.top = math.max(insets.top, titleRow)
   end
   return insets
 end

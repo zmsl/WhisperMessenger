@@ -28,10 +28,11 @@ return function()
   do
     Hud.Configure("classic")
     local insets = Hud.ContentInsets(L)
+    local docked = Hud.ContentInsets(L, "right")
     local result = Metrics.CalculateRelayout({ compactLayout = true, nativeChrome = true, screenEdge = "right" }, 360, 640, 180, Theme)
     Hud.Configure("off")
     assert(result.contactsWidth == 360 - insets.left - EDGES, "only the inner border is cleared, got " .. tostring(result.contactsWidth))
-    assert(result.contactsHeight == 640 - insets.top, "no bottom border, got " .. tostring(result.contactsHeight))
+    assert(result.contactsHeight == 640 - docked.top, "no bottom border, below the docked title row, got " .. tostring(result.contactsHeight))
   end
 
   -- test_bottom_reserve_shortens_the_panes

@@ -1,4 +1,6 @@
 -- The docked window's top: title art, inner tile, close button, title divider.
+local ROW = require("WhisperMessenger.UI.Theme").LAYOUT.SCREEN_EDGE_TITLE_ROW_HEIGHT
+local GAP = require("WhisperMessenger.UI.Theme").LAYOUT.SCREEN_EDGE_TITLE_GAP
 local FakeUI = require("tests.helpers.fake_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ScreenEdgeBorder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeBorder")
@@ -110,8 +112,8 @@ return function()
       border.apply(side)
       local point, rel, relPoint, x, y = close:GetPoint(1)
       assert(
-        close:GetNumPoints() == 1 and point == "TOPRIGHT" and rel == frame and relPoint == "TOPRIGHT" and x == -4 and y == -4,
-        side .. ": inside"
+        close:GetNumPoints() == 1 and point == "RIGHT" and rel == frame and relPoint == "TOPRIGHT" and x == -4 and y == -ROW / 2,
+        side .. ": inside, centred in the title row"
       )
       border.apply(nil)
       point, _, _, x, y = close:GetPoint(1)
@@ -122,14 +124,20 @@ return function()
   -- test_title_divider_under_the_title_row
   do
     local factory, frame = build()
-    local border = ScreenEdgeBorder.Create(factory, frame, nil, { titleHeight = 30, hud = true })
+    local close = factory.CreateFrame("Button", nil, frame)
+    close:SetSize(24, 24)
+    close:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 1, 0)
+    frame.CloseButton = close
+    local border = ScreenEdgeBorder.Create(factory, frame, nil, { titleHeight = ROW + GAP, hud = true })
     border.apply("right")
     local divider = border.titleDivider
     assert(divider and divider:IsShown(), "divider shown")
-    assert(divider.height == 1, "1 px")
+    assert(divider.atlas == "_UI-Frame-InnerTopTile" and divider.height == 3, "HUD: the inset top bevel at its 3 px, got " .. tostring(divider.atlas))
     local point, rel, relPoint, x, y = divider:GetPoint(1)
-    assert(point == "TOPLEFT" and rel == frame and relPoint == "TOPLEFT" and x == 0 and y == -30, "under the title row")
-    assert(divider.color[1] == Theme.COLORS.accent[1] and math.abs(divider.alpha - 0.55) < 1e-9, "HUD: accent at 55%")
+    assert(point == "TOPLEFT" and rel == frame and relPoint == "TOPLEFT" and x == 0 and y == -(ROW + GAP), "under the title row")
+    -- test_close_button_sits_fully_above_the_divider
+    local closeBottom = ROW / 2 + close.height / 2
+    assert(closeBottom < ROW + GAP, "X bottom " .. closeBottom .. " above the divider top " .. (ROW + GAP))
     border.apply(nil)
     assert(not divider:IsShown(), "hidden when off")
     local custom = ScreenEdgeBorder.Create(factory, frame, nil, { titleHeight = 25, hud = false })

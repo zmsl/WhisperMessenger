@@ -1,4 +1,5 @@
 local CompactWindow = require("tests.helpers.compact_window")
+local FindUI = require("tests.helpers.find_ui")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
@@ -47,13 +48,22 @@ return function()
     local case = shown("right")
     local insets = Hud.ContentInsets(L)
     local area = case.frame.contentArea
-    assert(samePoint(area.points[1], { "TOPLEFT", case.frame, "TOPLEFT", insets.left, -insets.top }), "docked: top-left keeps the inner border")
+    assert(
+      samePoint(area.points[1], { "TOPLEFT", case.frame, "TOPLEFT", insets.left, -Hud.ContentInsets(L, "right").top }),
+      "docked: inner border, below the title divider"
+    )
     assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", 0, 0 }), "docked: content to the screen side and bottom")
     local width = case.frame:GetWidth()
     assert(
       case.window.contactsPane.width == width - insets.left - EDGES,
       "docked: panes sized to the wider area, got " .. tostring(case.window.contactsPane.width)
     )
+    -- test_hud_title_divider_sits_under_the_docked_title_row
+    local divider = FindUI.find(case.frame, function(node)
+      return node.atlas == "_UI-Frame-InnerTopTile"
+    end)
+    local _, _, _, _, dividerY = divider:GetPoint(1)
+    assert(dividerY == -(L.SCREEN_EDGE_TITLE_ROW_HEIGHT + L.SCREEN_EDGE_TITLE_GAP), "divider under the title row, got " .. tostring(dividerY))
     goOff(case)
     assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -insets.right, insets.bottom }), "off: template insets back")
     assert(case.window.contactsPane.width == width - insets.left - insets.right - EDGES, "off: panes clear both borders again")

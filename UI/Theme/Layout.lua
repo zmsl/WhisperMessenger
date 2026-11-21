@@ -55,6 +55,11 @@ local Layout = {
   -- Room around the tabs in the docked window's bottom band (the native tab
   -- art reaches below its anchor).
   SCREEN_EDGE_TAB_BAND_PAD_TOP = 8,
+  -- Docked Native HUD title row: buttons centred in it, then a gap and the
+  -- inset bevel divider (its atlas is 3 px tall); the content starts below.
+  SCREEN_EDGE_TITLE_ROW_HEIGHT = 26,
+  SCREEN_EDGE_TITLE_GAP = 3,
+  SCREEN_EDGE_DIVIDER_HEIGHT = 3,
   SCREEN_EDGE_TAB_BAND_PAD_BOTTOM = 10,
 
   TOP_BAR_HEIGHT = 24,

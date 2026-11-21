@@ -97,7 +97,7 @@ function EdgeWiring.Attach(edge, options)
   local hud = frame.contentArea ~= nil
   local border = ScreenEdgeBorder.Create(options.factory, frame, options.chrome.windowEdges, {
     hud = hud,
-    titleHeight = hud and (L.TOP_BAR_HEIGHT + L.HUD_CONTENT_TOP_INSET) or (L.TOP_BAR_HEIGHT + 1),
+    titleHeight = hud and (L.SCREEN_EDGE_TITLE_ROW_HEIGHT + L.SCREEN_EDGE_TITLE_GAP) or (L.TOP_BAR_HEIGHT + 1),
   })
   local band = ScreenEdgeTabBand.Create(options.factory, frame, { hud = hud })
 

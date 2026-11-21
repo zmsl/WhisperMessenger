@@ -154,8 +154,10 @@ return function()
     local plain = Hud.ContentInsets(L)
     local right = Hud.ContentInsets(L, "right")
     assert(right.right == 0 and right.bottom == 0, "right edge: right and bottom are 0")
-    assert(right.left == plain.left and right.top == plain.top, "right edge: left and top unchanged")
+    assert(right.left == plain.left, "right edge: left unchanged")
     local left = Hud.ContentInsets(L, "left")
     assert(left.left == 0 and left.bottom == 0 and left.right == plain.right, "left edge: left and bottom are 0")
+    local row = L.SCREEN_EDGE_TITLE_ROW_HEIGHT + L.SCREEN_EDGE_TITLE_GAP + L.SCREEN_EDGE_DIVIDER_HEIGHT
+    assert(right.top == math.max(plain.top, row), "docked: content starts below the title divider, got " .. tostring(right.top))
   end)
 end
