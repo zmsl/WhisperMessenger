@@ -357,6 +357,7 @@ UI/ToggleIcon/PreviewCard.lua
 UI/ToggleIcon/IncomingPreview.lua
 UI/ToggleIcon/PulseGlow.lua
 UI/ToggleIcon/ScreenEdgeGlow.lua
+UI/ToggleIcon/ScreenEdgeHandle.lua
 UI/ToggleIcon/ScreenEdgeSurface.lua
 UI/ToggleIcon/Desaturation.lua
 UI/ToggleIcon/IconClick.lua
