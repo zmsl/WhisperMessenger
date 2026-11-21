@@ -29,14 +29,14 @@ end
 
 return function()
   for _, skin in ipairs(SKINS) do
-    -- test_inside_anchors_the_strip_on_the_window_bottom_edge
+    -- test_inside_anchors_the_strip_the_given_height_above_the_window_bottom
     do
       local toggle, window = create(skin)
       toggle.setShown(true)
-      toggle.setInside(true)
+      toggle.setInside(true, 10)
       anchoredAs(toggle.frame, window, {
-        { "BOTTOMLEFT", "BOTTOMLEFT", skin.left, 0 },
-        { "BOTTOMRIGHT", "BOTTOMRIGHT", 0, 0 },
+        { "BOTTOMLEFT", "BOTTOMLEFT", skin.left, 10 },
+        { "BOTTOMRIGHT", "BOTTOMRIGHT", 0, 10 },
       }, skin.label .. " inside")
       -- test_inside_strip_does_not_reach_the_clamp_below_the_window
       assert(select(4, window:GetClampRectInsets()) == 3, skin.label .. ": no clamp reach while inside")

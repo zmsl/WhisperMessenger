@@ -385,6 +385,7 @@ UI/MessengerWindow/ChromeBuilder/BlizzardChrome.lua
 UI/MessengerWindow/ChromeBuilder/RetailChrome.lua
 UI/MessengerWindow/ChromeBuilder/ModernChrome.lua
 UI/MessengerWindow/ChromeBuilder/ScreenEdgeBorder.lua
+UI/MessengerWindow/ChromeBuilder/ScreenEdgeTabBand.lua
 UI/MessengerWindow/ChromeBuilder/Buttons.lua
 UI/MessengerWindow/ChromeBuilder/ResizeGrip.lua
 UI/MessengerWindow/ChromeBuilder/PatchNotesButton.lua

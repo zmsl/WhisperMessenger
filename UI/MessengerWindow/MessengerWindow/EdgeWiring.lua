@@ -8,6 +8,8 @@ local CompactDock = ns.MessengerWindowCompactDock or require("WhisperMessenger.U
 local ScreenEdgeBorder = ns.MessengerWindowChromeBuilderScreenEdgeBorder
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeBorder")
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
+local ScreenEdgeTabBand = ns.MessengerWindowChromeBuilderScreenEdgeTabBand
+  or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeTabBand")
 local CompactViewport = ns.MessengerWindowLayoutCompactViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.CompactViewport")
 
 -- The compact window held against the left or right screen edge: full height,
@@ -90,8 +92,14 @@ function EdgeWiring.Attach(edge, options)
   local grip = options.chrome.resizeGrip
   local tabToggle = options.tabToggle
   local scriptResult = options.scriptResult
-  local border = ScreenEdgeBorder.Create(options.factory, frame, options.chrome.windowEdges)
   local L = Theme.LAYOUT
+  -- The Native HUD window is the one with a template content area.
+  local hud = frame.contentArea ~= nil
+  local border = ScreenEdgeBorder.Create(options.factory, frame, options.chrome.windowEdges, {
+    hud = hud,
+    titleHeight = hud and (L.TOP_BAR_HEIGHT + L.HUD_CONTENT_TOP_INSET) or (L.TOP_BAR_HEIGHT + 1),
+  })
+  local band = ScreenEdgeTabBand.Create(options.factory, frame, { hud = hud })
 
   local source = options.factory.CreateFrame("Frame", nil, frame:GetParent() or _G.UIParent)
   source:EnableMouse(false)
@@ -104,12 +112,13 @@ function EdgeWiring.Attach(edge, options)
   local gripWasShown = false
   local layout = options.layout
 
-  -- At the edge the tab strip sits inside the window; the panes end above it
-  -- while it shows.
+  -- At the edge the tab strip sits inside the window in its own band; the
+  -- panes end above the band while the strip shows.
   local function stripReserve(side)
     if side and tabToggle and tabToggle.frame:IsShown() then
-      return tabToggle.frame:GetHeight()
+      return band.show(tabToggle.frame:GetHeight())
     end
+    band.hide()
     return 0
   end
 
@@ -136,7 +145,7 @@ function EdgeWiring.Attach(edge, options)
 
   local function setStripInside(inside)
     if tabToggle and tabToggle.setInside then
-      tabToggle.setInside(inside)
+      tabToggle.setInside(inside, L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM)
     end
   end
 

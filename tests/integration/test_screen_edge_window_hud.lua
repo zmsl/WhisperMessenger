@@ -6,6 +6,7 @@ local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggl
 -- The Native HUD (Classic template) window held at a screen edge: content and
 -- tab strip against the screen side and bottom, all back when it goes off.
 local L = Theme.LAYOUT
+local BAND = L.SCREEN_EDGE_TAB_BAND_PAD_TOP + NativeTabToggle.HEIGHT + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
 local EDGES = L.CONTACTS_PANE_LEFT_INSET + L.CONTENT_PANE_RIGHT_INSET
 local SAVED = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 50, y = 700, width = 360, height = 640 }
 
@@ -63,11 +64,8 @@ return function()
     local case = shown("left")
     local strip = case.window.tabToggle.frame
     local viewport = case.window.compactViewport
-    assert(samePoint(strip.points[1], { "BOTTOMLEFT", case.frame, "BOTTOMLEFT", 11, 0 }), "HUD tabs on the window's bottom edge")
-    assert(
-      samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame.contentArea, "BOTTOMRIGHT", -1, 1 + NativeTabToggle.HEIGHT }),
-      "panes end above the tabs"
-    )
+    assert(samePoint(strip.points[1], { "BOTTOMLEFT", case.frame, "BOTTOMLEFT", 11, L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM }), "HUD tabs inside the band")
+    assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame.contentArea, "BOTTOMRIGHT", -1, 1 + BAND }), "panes end above the tabs")
     goOff(case)
     assert(samePoint(strip.points[1], { "TOPLEFT", case.frame, "BOTTOMLEFT", 11, 2 }), "HUD tabs hang again")
     assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame.contentArea, "BOTTOMRIGHT", -1, 1 }), "no room kept")

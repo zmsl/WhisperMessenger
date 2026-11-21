@@ -65,13 +65,13 @@ return function()
     assert(shown(edges.left) and hidden(edges.right, edges.top, edges.bottom), "right edge keeps the left one")
   end
 
-  -- test_classic_left_hides_corners_bottom_and_left_tile_keeps_top_and_right_tile
+  -- test_classic_left_hides_corners_bottom_and_left_tile_keeps_the_right_tile
   do
     local factory, frame = build()
     local p = withPieces(frame, frame, CLASSIC)
     ScreenEdgeBorder.Create(factory, frame, nil).apply("left")
     assert(hidden(p.TopLeftCorner, p.TopRightCorner, p.BotLeftCorner, p.BotRightCorner, p.BottomBorder, p.LeftBorder), "screen-side pieces hidden")
-    assert(shown(p.TopBorder, p.RightBorder), "top and right tile stay")
+    assert(shown(p.RightBorder), "right tile stays")
   end
 
   -- test_classic_right_hides_the_right_tile_not_the_left
@@ -79,7 +79,7 @@ return function()
     local factory, frame = build()
     local p = withPieces(frame, frame, CLASSIC)
     ScreenEdgeBorder.Create(factory, frame, nil).apply("right")
-    assert(hidden(p.RightBorder) and shown(p.LeftBorder, p.TopBorder), "right tile hidden, left stays")
+    assert(hidden(p.RightBorder) and shown(p.LeftBorder), "right tile hidden, left stays")
   end
 
   -- test_retail_left_hides_nine_slice_corners_bottom_and_left_edge
@@ -90,7 +90,7 @@ return function()
     local border = ScreenEdgeBorder.Create(factory, frame, nil)
     border.apply("left")
     assert(hidden(p.TopLeftCorner, p.TopRightCorner, p.BottomLeftCorner, p.BottomRightCorner, p.BottomEdge, p.LeftEdge), "hidden")
-    assert(shown(p.RightEdge, p.TopEdge), "right and top edge stay")
+    assert(shown(p.RightEdge), "right edge stays")
     border.apply(nil)
     assert(shown(p.TopLeftCorner, p.LeftEdge, p.BottomEdge), "restored")
   end

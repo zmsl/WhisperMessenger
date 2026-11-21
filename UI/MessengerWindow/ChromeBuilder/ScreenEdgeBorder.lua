@@ -26,13 +26,17 @@ local CLASSIC_KEYS = {
   "InsetBorderBottom",
   "InsetBorderBottomLeft",
   "InsetBorderBottomRight",
+  -- The title strip (also on ButtonFrameTemplate: TopTileStreaks).
+  "TopBorder",
+  "TitleBg",
+  "TopTileStreaks",
 }
 local CLASSIC_SIDE_KEYS = {
   left = { "LeftBorder", "InsetBorderLeft", "InsetBorderTopLeft" },
   right = { "RightBorder", "InsetBorderRight", "InsetBorderTopRight" },
 }
 -- ButtonFrameTemplate's NineSlice.
-local RETAIL_KEYS = { "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner", "BottomEdge" }
+local RETAIL_KEYS = { "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner", "BottomEdge", "TopEdge" }
 local RETAIL_SIDE_KEYS = { left = { "LeftEdge" }, right = { "RightEdge" } }
 -- The Retail panel insets (InsetFrameTemplate NineSlice): their top on the
 -- inner side stays.
@@ -40,6 +44,11 @@ local INSET_KEYS = { "BottomLeftCorner", "BottomRightCorner", "BottomEdge" }
 local INSET_SIDE_KEYS = { left = { "TopLeftCorner", "LeftEdge" }, right = { "TopRightCorner", "RightEdge" } }
 local PANEL_INSETS = { "Inset", "contactsInset" }
 local BACKGROUND_KEYS = { "Bg", "InsetBg" }
+-- The side tile on the inner side, by screen side (Classic frame, Retail NineSlice).
+local INNER_TILE_KEYS = { left = "RightBorder", right = "LeftBorder" }
+local INNER_EDGE_KEYS = { left = "RightEdge", right = "LeftEdge" }
+local CLOSE_INSET = 4
+local HUD_DIVIDER_ALPHA = 0.55
 
 local function collect(pieces, owner, keys, sideKeys)
   if type(owner) ~= "table" then
@@ -71,11 +80,16 @@ end
 
 -- Moves the region's points that sit on the frame's screen side or bottom
 -- onto that edge; returns its old points.
-local function stretch(region, frame, side)
+local function readPoints(region)
   local saved = {}
   for i = 1, region:GetNumPoints() do
     saved[i] = { region:GetPoint(i) }
   end
+  return saved
+end
+
+local function stretch(region, frame, side)
+  local saved = readPoints(region)
   local edge = side == "right" and "RIGHT" or "LEFT"
   region:ClearAllPoints()
   for _, p in ipairs(saved) do
@@ -98,10 +112,60 @@ local function setPoints(region, points)
   end
 end
 
-function ScreenEdgeBorder.Create(factory, frame, windowEdges)
+-- The inner tile runs between its two (hidden) corners' outer ends instead
+-- of their inner ends: frame top to frame bottom.
+local function runFullHeight(region)
+  local saved = readPoints(region)
+  region:ClearAllPoints()
+  for _, p in ipairs(saved) do
+    region:SetPoint(p[1], p[2], p[1], p[4], 0)
+  end
+  return saved
+end
+
+local function moveCloseInside(button, frame)
+  local saved = readPoints(button)
+  button:ClearAllPoints()
+  button:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -CLOSE_INSET, -CLOSE_INSET)
+  return saved
+end
+
+-- look (optional): titleHeight (px from the frame top to the divider under the
+-- title row), hud (Native HUD colours).
+function ScreenEdgeBorder.Create(factory, frame, windowEdges, look)
+  look = look or {}
   local hiddenByUs = {}
   local movedPoints = {}
   local shade, shadeTexture
+  local result = {}
+
+  local function move(region, mover)
+    if region and region.GetNumPoints and region:GetNumPoints() > 0 then
+      movedPoints[region] = mover(region, frame)
+    end
+  end
+
+  local function paintTitleDivider()
+    if not look.titleHeight then
+      return
+    end
+    local divider = result.titleDivider
+    if not divider then
+      divider = frame:CreateTexture(nil, "OVERLAY")
+      divider:SetPoint("TOPLEFT", frame, "TOPLEFT", 0, -look.titleHeight)
+      divider:SetPoint("TOPRIGHT", frame, "TOPRIGHT", 0, -look.titleHeight)
+      divider:SetHeight(1)
+      result.titleDivider = divider
+    end
+    local colors = Theme.COLORS
+    if look.hud then
+      local accent = colors.accent
+      UIHelpers.applyColorTexture(divider, { accent[1], accent[2], accent[3], HUD_DIVIDER_ALPHA })
+    else
+      UIHelpers.applyColorTexture(divider, colors.window_border)
+    end
+    divider:Show()
+  end
 
   local function restore()
     for _, piece in ipairs(hiddenByUs) do
@@ -136,30 +200,36 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges)
     shade:Show()
   end
 
-  return {
-    apply = function(side)
-      restore()
-      if side ~= "left" and side ~= "right" then
-        if shade then
-          shade:Hide()
-        end
-        return
+  result.apply = function(side)
+    restore()
+    if side ~= "left" and side ~= "right" then
+      if shade then
+        shade:Hide()
       end
-      for _, piece in ipairs(screenSidePieces(frame, windowEdges, side)) do
-        if piece.IsShown and piece:IsShown() then
-          piece:Hide()
-          hiddenByUs[#hiddenByUs + 1] = piece
-        end
+      if result.titleDivider then
+        result.titleDivider:Hide()
       end
-      for _, key in ipairs(BACKGROUND_KEYS) do
-        local region = frame[key]
-        if region and region.GetNumPoints then
-          movedPoints[region] = stretch(region, frame, side)
-        end
+      return
+    end
+    for _, piece in ipairs(screenSidePieces(frame, windowEdges, side)) do
+      if piece.IsShown and piece:IsShown() then
+        piece:Hide()
+        hiddenByUs[#hiddenByUs + 1] = piece
       end
-      paintShade(side)
-    end,
-  }
+    end
+    for _, key in ipairs(BACKGROUND_KEYS) do
+      local region = frame[key]
+      if region and region.GetNumPoints then
+        movedPoints[region] = stretch(region, frame, side)
+      end
+    end
+    move(frame[INNER_TILE_KEYS[side]], runFullHeight)
+    move(frame.NineSlice and frame.NineSlice[INNER_EDGE_KEYS[side]], runFullHeight)
+    move(frame.CloseButton, moveCloseInside)
+    paintTitleDivider()
+    paintShade(side)
+  end
+  return result
 end
 
 ns.MessengerWindowChromeBuilderScreenEdgeBorder = ScreenEdgeBorder

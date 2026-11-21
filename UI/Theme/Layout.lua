@@ -52,6 +52,10 @@ local Layout = {
   SCREEN_EDGE_HANDLE_HEIGHT = 44,
   SCREEN_EDGE_HANDLE_ICON_SIZE = 18,
   SCREEN_EDGE_HANDLE_BADGE_SIZE = 18,
+  -- Room around the tabs in the docked window's bottom band (the native tab
+  -- art reaches below its anchor).
+  SCREEN_EDGE_TAB_BAND_PAD_TOP = 8,
+  SCREEN_EDGE_TAB_BAND_PAD_BOTTOM = 10,
 
   TOP_BAR_HEIGHT = 24,
   CONTENT_PADDING = 16,
