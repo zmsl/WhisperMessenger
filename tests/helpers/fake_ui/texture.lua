@@ -47,7 +47,6 @@ function Texture.Augment(frame)
   function frame:SetAtlas(atlas, useAtlasSize)
     self.atlas = atlas
     self.useAtlasSize = useAtlasSize
-    return true
   end
 
   function frame:SetBlendMode(mode)

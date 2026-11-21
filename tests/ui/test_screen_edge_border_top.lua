@@ -2,6 +2,7 @@
 local ROW = require("WhisperMessenger.UI.Theme").LAYOUT.SCREEN_EDGE_TITLE_ROW_HEIGHT
 local GAP = require("WhisperMessenger.UI.Theme").LAYOUT.SCREEN_EDGE_TITLE_GAP
 local FakeUI = require("tests.helpers.fake_ui")
+local BevelAtlas = require("tests.helpers.bevel_atlas")
 local Theme = require("WhisperMessenger.UI.Theme")
 local ScreenEdgeBorder = require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeBorder")
 
@@ -122,7 +123,7 @@ return function()
   end
 
   -- test_title_divider_under_the_title_row
-  do
+  BevelAtlas.With(function()
     local factory, frame = build()
     local close = factory.CreateFrame("Button", nil, frame)
     close:SetSize(24, 24)
@@ -132,6 +133,7 @@ return function()
     border.apply("right")
     local divider = border.titleDivider
     assert(divider and divider:IsShown(), "divider shown")
+    assert(divider.color == nil, "no colour line over the bevel")
     assert(divider.atlas == "_UI-Frame-InnerTopTile" and divider.height == 3, "HUD: the inset top bevel at its 3 px, got " .. tostring(divider.atlas))
     local point, rel, relPoint, x, y = divider:GetPoint(1)
     assert(point == "TOPLEFT" and rel == frame and relPoint == "TOPLEFT" and x == 0 and y == -(ROW + GAP), "under the title row")
@@ -143,5 +145,15 @@ return function()
     local custom = ScreenEdgeBorder.Create(factory, frame, nil, { titleHeight = 25, hud = false })
     custom.apply("left")
     assert(custom.titleDivider.color[1] == Theme.COLORS.window_border[1], "custom: window border colour")
+  end)
+
+  -- test_title_divider_falls_back_to_a_line_without_the_atlas
+  do
+    local factory, frame = build()
+    local border = ScreenEdgeBorder.Create(factory, frame, nil, { titleHeight = ROW + GAP, hud = true })
+    border.apply("left")
+    local divider = border.titleDivider
+    assert(divider.atlas == nil and divider.height == 1, "no atlas: a 1 px line")
+    assert(divider.color[1] == Theme.COLORS.window_border[1], "window border colour")
   end
 end

@@ -81,11 +81,13 @@ NativeArt.INSET_BOTTOM_BEVEL = "_UI-Frame-InnerBotTile"
 NativeArt.INSET_BEVEL_HEIGHT = 3
 
 -- Paints `texture` with a horizontal inset bevel, tiled, at its own height.
--- False when the client lacks SetAtlas or the atlas (Classic flavours).
+-- False when the client lacks SetAtlas or the atlas (Classic flavours). The
+-- atlas is looked up first: SetAtlas returns nothing on the live client.
 function NativeArt.SetBevel(texture, atlas)
-  if type(texture.SetAtlas) ~= "function" or not texture:SetAtlas(atlas) then
+  if type(texture.SetAtlas) ~= "function" or NativeArt.AtlasInfo(atlas) == nil then
     return false
   end
+  texture:SetAtlas(atlas)
   if type(texture.SetHorizTile) == "function" then
     texture:SetHorizTile(true)
   end

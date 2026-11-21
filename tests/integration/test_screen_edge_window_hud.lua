@@ -1,5 +1,6 @@
 local CompactWindow = require("tests.helpers.compact_window")
 local FindUI = require("tests.helpers.find_ui")
+local BevelAtlas = require("tests.helpers.bevel_atlas")
 local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggle")
@@ -44,7 +45,7 @@ end
 
 return function()
   -- test_hud_content_reaches_the_screen_side_and_bottom_and_comes_back
-  do
+  BevelAtlas.With(function()
     local case = shown("right")
     local insets = Hud.ContentInsets(L)
     local area = case.frame.contentArea
@@ -62,12 +63,13 @@ return function()
     local divider = FindUI.find(case.frame, function(node)
       return node.atlas == "_UI-Frame-InnerTopTile"
     end)
+    assert(divider.color == nil, "the bevel, no colour line over it")
     local _, _, _, _, dividerY = divider:GetPoint(1)
     assert(dividerY == -(L.SCREEN_EDGE_TITLE_ROW_HEIGHT + L.SCREEN_EDGE_TITLE_GAP), "divider under the title row, got " .. tostring(dividerY))
     goOff(case)
     assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -insets.right, insets.bottom }), "off: template insets back")
     assert(case.window.contactsPane.width == width - insets.left - insets.right - EDGES, "off: panes clear both borders again")
-  end
+  end)
 
   -- test_hud_tabs_sit_inside_the_docked_window_and_hang_again_off
   do
