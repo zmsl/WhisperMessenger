@@ -200,6 +200,7 @@ function MessengerWindow.Create(factory, options)
     factory = factory,
     frame = frame,
     chrome = chrome,
+    layout = layout,
     tabToggle = contactsRuntime.tabToggle,
     settingsConfig = settingsConfig,
     compactLayout = compactLayout,
@@ -267,7 +268,7 @@ function MessengerWindow.Create(factory, options)
     onPositionChanged = onPositionChanged,
     buildState = windowGeometry.buildState,
   })
-  EdgeWiring.Bind(edge, dock, applySavedState)
+  EdgeWiring.Bind(edge, dock, applySavedState, windowSizing.relayoutCurrentSize)
   -- One relayout at build, so a bar height reported before the first resize moves the panes.
   windowSizing.relayoutCurrentSize()
 

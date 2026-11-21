@@ -146,4 +146,16 @@ return function()
     assert(insets.top == L.RETAIL_HUD_INSET_TOP and insets.bottom == L.RETAIL_HUD_INSET_BOTTOM, "retail: top and bottom insets")
     assert(type(insets.top) == "number" and insets.top > L.TOP_BAR_HEIGHT, "retail: content starts below the portrait, under the title bar")
   end)
+
+  -- test_screen_edge_insets_drop_the_screen_side_and_bottom
+  withXmlUtil(nil, function()
+    local L = require("WhisperMessenger.UI.Theme.Layout")
+    Hud.Configure("classic")
+    local plain = Hud.ContentInsets(L)
+    local right = Hud.ContentInsets(L, "right")
+    assert(right.right == 0 and right.bottom == 0, "right edge: right and bottom are 0")
+    assert(right.left == plain.left and right.top == plain.top, "right edge: left and top unchanged")
+    local left = Hud.ContentInsets(L, "left")
+    assert(left.left == 0 and left.bottom == 0 and left.right == plain.right, "left edge: left and bottom are 0")
+  end)
 end

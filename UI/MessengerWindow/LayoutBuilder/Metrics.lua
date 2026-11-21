@@ -107,7 +107,7 @@ function Metrics.CalculateRelayout(layoutState, width, height, requestedContacts
   end
   -- Native WoW HUD content area is smaller than the frame by the template
   -- border and title bar (single-anchored divider/handle take this height).
-  local hudInsets = layoutState.nativeChrome and Hud.ContentInsets(layout)
+  local hudInsets = layoutState.nativeChrome and Hud.ContentInsets(layout, layoutState.screenEdge)
   local contactsHeight = hudInsets and (height - hudInsets.top - hudInsets.bottom) or (height - resolvedTheme.TOP_BAR_HEIGHT)
   local contentWidth = width - contactsWidth - resolvedTheme.DIVIDER_THICKNESS
   -- Options content column: HUD fills the content area; modern keeps its

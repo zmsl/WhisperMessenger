@@ -75,23 +75,32 @@ end
 
 -- Edges of the window's content area, measured in from the frame's outer
 -- edges. Retail's ButtonFrameTemplate and Classic's BasicFrameTemplateWithInset
--- have different borders and title bars.
-function Hud.ContentInsets(layout)
+-- have different borders and title bars. screenEdge ("left"/"right", optional):
+-- the window is held against that screen edge, whose border and the bottom
+-- border are hidden, so the content reaches both.
+function Hud.ContentInsets(layout, screenEdge)
+  local insets
   if activeStyle == "retail" then
-    return {
+    insets = {
       left = layout.RETAIL_HUD_INSET_LEFT,
       right = layout.RETAIL_HUD_INSET_RIGHT,
       top = layout.RETAIL_HUD_INSET_TOP,
       bottom = layout.RETAIL_HUD_INSET_BOTTOM,
     }
+  else
+    local pad = layout.HUD_CONTENT_INSET
+    insets = {
+      left = layout.HUD_INSET_LEFT + pad,
+      right = layout.HUD_INSET_RIGHT + pad,
+      top = layout.TOP_BAR_HEIGHT + layout.HUD_CONTENT_TOP_INSET,
+      bottom = layout.HUD_INSET_BOTTOM + pad,
+    }
   end
-  local pad = layout.HUD_CONTENT_INSET
-  return {
-    left = layout.HUD_INSET_LEFT + pad,
-    right = layout.HUD_INSET_RIGHT + pad,
-    top = layout.TOP_BAR_HEIGHT + layout.HUD_CONTENT_TOP_INSET,
-    bottom = layout.HUD_INSET_BOTTOM + pad,
-  }
+  if screenEdge == "left" or screenEdge == "right" then
+    insets[screenEdge] = 0
+    insets.bottom = 0
+  end
+  return insets
 end
 
 ns.Hud = Hud

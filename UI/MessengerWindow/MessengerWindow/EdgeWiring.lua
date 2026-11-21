@@ -7,6 +7,7 @@ local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local CompactDock = ns.MessengerWindowCompactDock or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactDock")
 local ScreenEdgeBorder = ns.MessengerWindowChromeBuilderScreenEdgeBorder
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeBorder")
+local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
 
 -- The compact window held against the left or right screen edge: full height,
 -- not movable, not resizable, no position saved, sliding out of the edge.
@@ -80,8 +81,9 @@ function EdgeWiring.DockOptions(edge, windowOptions)
   }, { __index = windowOptions })
 end
 
--- options: factory, frame, chrome, tabToggle, settingsConfig, compactLayout,
--- scriptResult (its applyWindowSize is wrapped: call before anyone captures it).
+-- options: factory, frame, chrome, layout, tabToggle, settingsConfig,
+-- compactLayout, scriptResult (its applyWindowSize is wrapped: call before
+-- anyone captures it).
 function EdgeWiring.Attach(edge, options)
   local frame = options.frame
   local grip = options.chrome.resizeGrip
@@ -99,6 +101,21 @@ function EdgeWiring.Attach(edge, options)
 
   local placedSide = nil
   local gripWasShown = false
+  local layout = options.layout
+
+  -- The HUD content area and the pane sizes follow the hidden borders.
+  local function placeContent(side)
+    if layout.screenEdge == side then
+      return
+    end
+    layout.screenEdge = side
+    if frame.contentArea then
+      BlizzardChrome.PlaceContentArea(frame.contentArea, frame, L, side)
+    end
+    if edge.relayout then
+      edge.relayout()
+    end
+  end
 
   edge.side = function()
     return options.compactLayout and EdgeWiring.Side(options.settingsConfig) or nil
@@ -130,6 +147,7 @@ function EdgeWiring.Attach(edge, options)
         grip:Show()
       end
       border.apply(nil)
+      placeContent(nil)
       source:Hide()
       return true
     end
@@ -145,6 +163,7 @@ function EdgeWiring.Attach(edge, options)
     end
     CompactDock.PlaceAtEdge(frame, side, tabToggle and tabToggle.hangHeight or 0)
     border.apply(side)
+    placeContent(side)
     anchorSource(side)
     source:Show()
     return false
@@ -161,8 +180,10 @@ function EdgeWiring.Attach(edge, options)
 end
 
 -- dock: DockWiring hooks after DockWiring.Attach. applySavedState(state) puts
--- the window back where it was saved ({} = centred).
-function EdgeWiring.Bind(edge, dock, applySavedState)
+-- the window back where it was saved ({} = centred). relayout() lays the panes
+-- out again at the current size.
+function EdgeWiring.Bind(edge, dock, applySavedState, relayout)
+  edge.relayout = relayout
   local dockNow, onWindowMoved = dock.dock, dock.onWindowMoved
   dock.dock = function()
     edge.apply()

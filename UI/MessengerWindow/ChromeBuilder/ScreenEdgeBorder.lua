@@ -6,25 +6,51 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 
--- Hides the border pieces on the screen side of a window held against a screen
--- edge, and paints a dark shade there. One piece list per chrome; a key a
--- flavour lacks is skipped. Only pieces that were shown are hidden and restored.
+-- Hides the border pieces on the screen side and bottom of a window held
+-- against a screen edge, stretches its backgrounds to those edges and paints a
+-- dark shade there. One piece list per chrome (keys from the Blizzard
+-- templates); a key a flavour lacks is skipped. Only pieces that were shown
+-- are hidden and restored; the backgrounds get their own points back.
 local ScreenEdgeBorder = {}
 
 local SHADE_LEVEL_ABOVE_PANES = 25
 local SHADE_COLOR = { 0, 0, 0, 0.75 }
 
-local CLASSIC_KEYS = { "TopLeftCorner", "TopRightCorner", "BotLeftCorner", "BotRightCorner", "BottomBorder" }
+-- BasicFrameTemplateWithInset: outer border, then the inset's border.
+local CLASSIC_KEYS = {
+  "TopLeftCorner",
+  "TopRightCorner",
+  "BotLeftCorner",
+  "BotRightCorner",
+  "BottomBorder",
+  "InsetBorderBottom",
+  "InsetBorderBottomLeft",
+  "InsetBorderBottomRight",
+}
+local CLASSIC_SIDE_KEYS = {
+  left = { "LeftBorder", "InsetBorderLeft", "InsetBorderTopLeft" },
+  right = { "RightBorder", "InsetBorderRight", "InsetBorderTopRight" },
+}
+-- ButtonFrameTemplate's NineSlice.
 local RETAIL_KEYS = { "TopLeftCorner", "TopRightCorner", "BottomLeftCorner", "BottomRightCorner", "BottomEdge" }
+local RETAIL_SIDE_KEYS = { left = { "LeftEdge" }, right = { "RightEdge" } }
+-- The Retail panel insets (InsetFrameTemplate NineSlice): their top on the
+-- inner side stays.
+local INSET_KEYS = { "BottomLeftCorner", "BottomRightCorner", "BottomEdge" }
+local INSET_SIDE_KEYS = { left = { "TopLeftCorner", "LeftEdge" }, right = { "TopRightCorner", "RightEdge" } }
+local PANEL_INSETS = { "Inset", "contactsInset" }
+local BACKGROUND_KEYS = { "Bg", "InsetBg" }
 
-local function collect(pieces, owner, keys, sideKey)
+local function collect(pieces, owner, keys, sideKeys)
   if type(owner) ~= "table" then
     return
   end
   for _, key in ipairs(keys) do
     pieces[#pieces + 1] = owner[key]
   end
-  pieces[#pieces + 1] = owner[sideKey]
+  for _, key in ipairs(sideKeys) do
+    pieces[#pieces + 1] = owner[key]
+  end
 end
 
 local function screenSidePieces(frame, windowEdges, side)
@@ -32,13 +58,46 @@ local function screenSidePieces(frame, windowEdges, side)
   if type(windowEdges) == "table" then
     pieces[1], pieces[2], pieces[3] = windowEdges.top, windowEdges.bottom, windowEdges[side]
   end
-  collect(pieces, frame, CLASSIC_KEYS, side == "left" and "LeftBorder" or "RightBorder")
-  collect(pieces, frame.NineSlice, RETAIL_KEYS, side == "left" and "LeftEdge" or "RightEdge")
+  collect(pieces, frame, CLASSIC_KEYS, CLASSIC_SIDE_KEYS[side])
+  collect(pieces, frame.NineSlice, RETAIL_KEYS, RETAIL_SIDE_KEYS[side])
+  for _, key in ipairs(PANEL_INSETS) do
+    collect(pieces, frame[key] and frame[key].NineSlice, INSET_KEYS, INSET_SIDE_KEYS[side])
+  end
   return pieces
+end
+
+-- Moves the region's points that sit on the frame's screen side or bottom
+-- onto that edge; returns its old points.
+local function stretch(region, frame, side)
+  local saved = {}
+  for i = 1, region:GetNumPoints() do
+    saved[i] = { region:GetPoint(i) }
+  end
+  local edge = side == "right" and "RIGHT" or "LEFT"
+  region:ClearAllPoints()
+  for _, p in ipairs(saved) do
+    local x, y = p[4], p[5]
+    if p[2] == frame and string.find(p[3], edge, 1, true) then
+      x = 0
+    end
+    if p[2] == frame and string.find(p[3], "BOTTOM", 1, true) then
+      y = 0
+    end
+    region:SetPoint(p[1], p[2], p[3], x, y)
+  end
+  return saved
+end
+
+local function setPoints(region, points)
+  region:ClearAllPoints()
+  for _, p in ipairs(points) do
+    region:SetPoint(p[1], p[2], p[3], p[4], p[5])
+  end
 end
 
 function ScreenEdgeBorder.Create(factory, frame, windowEdges)
   local hiddenByUs = {}
+  local movedPoints = {}
   local shade, shadeTexture
 
   local function restore()
@@ -46,6 +105,10 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges)
       piece:Show()
     end
     hiddenByUs = {}
+    for region, points in pairs(movedPoints) do
+      setPoints(region, points)
+    end
+    movedPoints = {}
   end
 
   local function paintShade(side)
@@ -83,6 +146,12 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges)
         if piece.IsShown and piece:IsShown() then
           piece:Hide()
           hiddenByUs[#hiddenByUs + 1] = piece
+        end
+      end
+      for _, key in ipairs(BACKGROUND_KEYS) do
+        local region = frame[key]
+        if region and region.GetNumPoints then
+          movedPoints[region] = stretch(region, frame, side)
         end
       end
       paintShade(side)
