@@ -1,5 +1,7 @@
--- The edge handle: a small icon tab on the screen edge that opens the closed
--- window, styled like the window and badged with the unread whisper count.
+-- The edge handle: a half disc on the screen edge (flat side on the edge) that
+-- opens the closed window, rimmed like the window and badged with the unread
+-- whisper count.
+local ScreenEdgeHandle = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeHandle")
 local AnimatedFactory = require("tests.helpers.animated_factory")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local ScreenEdgeSurface = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeSurface")
@@ -60,7 +62,7 @@ return function()
     local frame = surface.handle.frame
     local p = frame.point
     assert(p[1] == "LEFT" and p[2] == parent and p[3] == "LEFT", "anchored LEFT to the parent's LEFT")
-    assert(frame.width == 30 and frame.height == 44, "30 x 44, got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
+    assert(frame.width == 26 and frame.height == 52, "26 x 52 (radius x diameter), got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
     assert(frame.frameStrata == "MEDIUM", "medium strata")
     assert(frame.mouseEnabled == true, "the handle takes the mouse")
   end
@@ -86,22 +88,26 @@ return function()
     assert(not badge.frame:IsShown(), "badge hidden at zero whispers")
   end
 
-  local function test_badge_sits_on_the_inner_top_corner()
+  local function test_badge_sits_on_the_upper_inner_curve()
     local surface, state = build()
     local handle = surface.handle
     local p = handle.badge.frame.point
-    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "TOPRIGHT", "left edge: inner corner is top-right, got " .. tostring(p[3]))
+    -- 45 degrees up the curve: radius 26 * 0.7 = 18 px in and up from the edge's midpoint.
+    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "LEFT" and p[4] == 18 and p[5] == 18, "left edge: on the curve, inward")
     state.side = "right"
     surface.refresh()
     p = handle.badge.frame.point
-    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "TOPLEFT", "right edge: inner corner is top-left, got " .. tostring(p[3]))
+    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "RIGHT" and p[4] == -18 and p[5] == 18, "right edge: on the curve, inward")
   end
 
   local function test_chat_icon_in_the_accent_colour()
     local surface = build()
     local icon = surface.handle.icon
     assert(icon.texturePath == Theme.TEXTURES.nav_whispers_icon, "the chat bubble icon")
-    assert(icon.width == 18 and icon.height == 18, "18 px")
+    assert(icon.width == 16 and icon.height == 16, "16 px")
+    local p = icon.point
+    -- The half disc's centroid: 4r / 3pi = 11 px in from the flat edge.
+    assert(p[1] == "CENTER" and p[2] == surface.handle.frame and p[3] == "LEFT" and p[4] == 11 and p[5] == 0, "centred in the half disc")
     assert(icon.vertexColor[1] == Theme.COLORS.accent[1] and icon.vertexColor[3] == Theme.COLORS.accent[3], "accent tint")
   end
 
@@ -124,27 +130,47 @@ return function()
     assert(state.clicks == 1, "one click, one toggle")
   end
 
-  local function test_custom_style_hides_the_screen_side_edge()
-    Hud.Configure("off")
-    local surface, state = build()
-    local border = surface.handle.border
-    assert(border.left:IsShown() == false and border.right:IsShown() == true, "left handle hides its left edge")
-    state.side = "right"
-    surface.refresh()
-    assert(border.left:IsShown() == true and border.right:IsShown() == false, "right handle hides its right edge")
+  local function test_half_disc_fill_in_the_background_colour()
+    local surface = build()
+    local fill = surface.handle.fill
+    assert(fill.texturePath == ScreenEdgeHandle.FILL_TEXTURE, "the half-disc mask")
+    assert(ScreenEdgeHandle.FILL_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\half_disc_mask.png", "fill path")
+    assert(fill.vertexColor[1] == Theme.COLORS.bg_primary[1] and fill.vertexColor[3] == Theme.COLORS.bg_primary[3], "background tint")
   end
 
-  local function test_hud_style_has_a_2px_accent_rim_on_three_sides()
+  local function test_hud_rim_is_the_gold_half_ring()
     Hud.Configure("classic")
+    local surface = build()
+    local rim = surface.handle.rim
+    assert(rim.texturePath == ScreenEdgeHandle.RIM_TEXTURE, "the half ring")
+    assert(ScreenEdgeHandle.RIM_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\half_ring_gold.png", "rim path")
+    assert(rim.desaturated == false and rim.vertexColor[1] == 1 and rim.vertexColor[3] == 1, "its own gold")
+    Hud.Configure("off")
+  end
+
+  local function test_custom_rim_is_the_half_ring_in_the_window_border_colour()
+    Hud.Configure("off")
+    local surface = build()
+    local rim = surface.handle.rim
+    assert(rim.texturePath == ScreenEdgeHandle.RIM_TEXTURE and rim.desaturated == true, "the half ring, desaturated")
+    assert(rim.vertexColor[1] == Theme.COLORS.window_border[1] and rim.vertexColor[3] == Theme.COLORS.window_border[3], "window border tint")
+  end
+
+  local function test_art_is_mirrored_on_the_right_edge()
     local surface, state = build()
-    local border = surface.handle.border
-    assert(border.top.height == 2 and border.right.width == 2, "2 px rim")
-    assert(border.top.color[1] == Theme.COLORS.accent[1] and border.top.color[3] == Theme.COLORS.accent[3], "accent rim")
-    assert(border.left:IsShown() == false and border.right:IsShown() and border.top:IsShown() and border.bottom:IsShown(), "screen side open")
+    local handle = surface.handle
+    for _, tex in ipairs({ handle.fill, handle.rim }) do
+      local c = tex.texCoords
+      assert(c[1] == 0 and c[2] == 1 and c[3] == 0 and c[4] == 1, "left edge: art as drawn (flat side left)")
+    end
     state.side = "right"
     surface.refresh()
-    assert(border.left:IsShown() and border.right:IsShown() == false, "right handle opens its right side")
-    Hud.Configure("off")
+    for _, tex in ipairs({ handle.fill, handle.rim }) do
+      local c = tex.texCoords
+      assert(c[1] == 1 and c[2] == 0 and c[3] == 0 and c[4] == 1, "right edge: mirrored")
+    end
+    local p = handle.icon.point
+    assert(p[3] == "RIGHT" and p[4] == -11, "right edge: icon 11 px in from the flat side")
   end
 
   Hud.Configure("off")
@@ -156,9 +182,11 @@ return function()
   test_right_handle_sits_on_the_right_edge()
   test_badge_shows_unread_whispers_and_hides_at_zero()
   test_click_runs_the_toggle()
-  test_custom_style_hides_the_screen_side_edge()
-  test_hud_style_has_a_2px_accent_rim_on_three_sides()
-  test_badge_sits_on_the_inner_top_corner()
+  test_half_disc_fill_in_the_background_colour()
+  test_hud_rim_is_the_gold_half_ring()
+  test_custom_rim_is_the_half_ring_in_the_window_border_colour()
+  test_art_is_mirrored_on_the_right_edge()
+  test_badge_sits_on_the_upper_inner_curve()
   test_chat_icon_in_the_accent_colour()
   test_no_blizzard_atlas()
   Hud.Configure("off")

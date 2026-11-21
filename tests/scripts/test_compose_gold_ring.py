@@ -237,5 +237,60 @@ class RoundedSquareArtTests(unittest.TestCase):
         )
 
 
+class HalfRingArtTests(unittest.TestCase):
+    """The edge handle's art: the right half of the ring, flat side on x = 0, 128 x 256."""
+
+    def test_half_ring_is_the_right_half_of_the_ring(self):
+        for x, y in [(0, 5), (10, 30), (100, 128), (127, 200)]:
+            self.assertEqual(
+                compose_gold_ring.half_ring_pixel(x, y, 256),
+                compose_gold_ring.ring_pixel(x + 128, y, 256),
+            )
+
+    def test_half_ring_band_meets_the_flat_edge_and_leaves_the_middle_clear(self):
+        self.assertEqual(compose_gold_ring.half_ring_pixel(0, 3, 256)[3], 1.0)
+        self.assertEqual(compose_gold_ring.half_ring_pixel(0, 128, 256)[3], 0.0)
+
+    def test_half_disc_mask_fills_to_mid_band_with_a_smoothed_curve(self):
+        mask = compose_gold_ring.half_disc_pixel
+        self.assertEqual(mask(0, 128, 256)[3], 1.0)
+        self.assertEqual(mask(126, 128, 256)[3], 0.0)  # past mid-band, under the rim's outer half
+        edge = [mask(x, 128, 256)[3] for x in range(128)]
+        self.assertTrue(any(0 < a < 1 for a in edge), "anti-aliased curve")
+
+    def check_mode(self, mode, size):
+        def write(path):
+            self.assertEqual(compose_gold_ring.main([mode, path]), 0)
+
+        self.assertEqual(png_info(render(write))[:4], size + (8, 6))
+
+    def test_half_ring_mode_writes_a_128_by_256_rgba_png(self):
+        self.check_mode("--half-ring", (128, 256))
+
+    def test_half_disc_mode_writes_a_128_by_256_rgba_png(self):
+        self.check_mode("--half-disc", (128, 256))
+
+    def test_half_ring_preview_mode_writes_an_rgba_png(self):
+        def write(path):
+            self.assertEqual(compose_gold_ring.main(["--half-ring-preview", path]), 0)
+
+        width, height, depth, color, _ = png_info(render(write))
+        self.assertEqual((depth, color), (8, 6))
+        self.assertGreater(width, 0)
+        self.assertGreater(height, 0)
+
+    def test_shipped_half_ring_matches_the_generator(self):
+        self.assertEqual(
+            png_info(render(compose_gold_ring.write_half_ring)),
+            png_info(shipped("half_ring_gold.png")),
+        )
+
+    def test_shipped_half_disc_matches_the_generator(self):
+        self.assertEqual(
+            png_info(render(compose_gold_ring.write_half_disc)),
+            png_info(shipped("half_disc_mask.png")),
+        )
+
+
 if __name__ == "__main__":
     unittest.main()

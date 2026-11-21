@@ -90,6 +90,18 @@ return function()
     assert(c[1] == 0 and c[2] == 1 and c[3] == 0 and c[4] == 1, "plain texture coordinates")
   end
 
+  local function test_glow_runs_the_full_edge_while_the_handle_is_off()
+    local surface, _, settings = build({ edgeHandle = false })
+    local frame = surface.glow.frame
+    assert(frame.width == 48 and frame.height == 1080, "handle off: full height, got " .. tostring(frame.height))
+    settings.edgeHandle = true
+    surface.refresh()
+    assert(frame.width == 48 and frame.height == 360, "handle back on: the middle third again, got " .. tostring(frame.height))
+    settings.edgeHandle = false
+    surface.refresh()
+    assert(frame.height == 1080, "live flip to off: full height again, got " .. tostring(frame.height))
+  end
+
   local function test_glow_follows_a_parent_height_change()
     local surface, _, _, parent = build()
     parent:SetSize(1920, 900)
@@ -117,6 +129,7 @@ return function()
   end
 
   test_glows_while_hidden_with_unread_whispers()
+  test_glow_runs_the_full_edge_while_the_handle_is_off()
   test_no_glow_while_the_window_shows()
   test_panel_badges_alone_do_not_glow()
   test_edge_glow_off_stops_it()

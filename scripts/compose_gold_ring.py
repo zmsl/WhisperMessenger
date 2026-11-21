@@ -5,6 +5,9 @@ Usage: python scripts/compose_gold_ring.py <ring.png> <preview.png>
        python scripts/compose_gold_ring.py --square-glow <glow.png>
        python scripts/compose_gold_ring.py --square-mask <mask.png>
        python scripts/compose_gold_ring.py --square-rounded <frame.png>
+       python scripts/compose_gold_ring.py --half-ring <rim.png>
+       python scripts/compose_gold_ring.py --half-disc <mask.png>
+       python scripts/compose_gold_ring.py --half-ring-preview <preview.png>
 """
 import math
 import struct
@@ -131,6 +134,18 @@ def square_rounded_pixel(x, y, size):
     return r, g, b, a * clamp01(outer + 0.5)
 
 
+def half_ring_pixel(x, y, size):
+    """The ring's right half: flat side on x = 0, in a size / 2 x size image."""
+    return ring_pixel(x + size // 2, y, size)
+
+
+def half_disc_pixel(x, y, size):
+    """White half disc to mid-band of the half ring, anti-aliased: the fill under the rim."""
+    radius = (size / 2 - 1) * (1 + INNER) / 2
+    dist = math.hypot(x + 0.5, y + 0.5 - size / 2)
+    return 1.0, 1.0, 1.0, clamp01(radius - dist + 0.5)
+
+
 def paeth(left, up, up_left):
     """PNG Paeth predictor: whichever neighbour is nearest to left + up - up_left."""
     estimate = left + up - up_left
@@ -196,15 +211,16 @@ def to_byte(value):
     return int(round(clamp01(value) * 255))
 
 
-def write_art(path, pixel, size=SIZE):
+def write_art(path, pixel, size=SIZE, width=None):
+    width = width or size
     rows = []
     for y in range(size):
         row = []
-        for x in range(size):
+        for x in range(width):
             r, g, b, a = pixel(x, y, size)
             row += [to_byte(r), to_byte(g), to_byte(b), to_byte(a)]
         rows.append(row)
-    write_png(path, size, size, rows)
+    write_png(path, width, size, rows)
 
 
 def write_ring(path):
@@ -225,6 +241,58 @@ def write_square_mask(path):
 
 def write_square_rounded(path):
     write_art(path, square_rounded_pixel)
+
+
+def write_half_ring(path):
+    write_art(path, half_ring_pixel, SIZE, SIZE // 2)
+
+
+def write_half_disc(path):
+    write_art(path, half_disc_pixel, SIZE, SIZE // 2)
+
+
+def write_half_ring_preview(path, height=52, zoom=6, fill=(0.06, 0.06, 0.07), custom=(0.35, 0.35, 0.40)):
+    """The edge handle at size on a screen edge (flat side left), zoomed: the gold
+    Native HUD rim, then the custom look (rim desaturated and tinted as in game)."""
+    backdrop = (0.30, 0.34, 0.28)
+    samples = 4
+    width = height // 2
+    gap = 8
+    canvas_w, canvas_h = 2 * width + gap + 4, height + 8
+    scale = SIZE / height
+    rows = []
+    for py in range(canvas_h):
+        row = []
+        for px in range(canvas_w):
+            panel = 0 if px < width + gap // 2 + 2 else 1
+            left = 2 if panel == 0 else width + gap + 2
+            total = [0.0, 0.0, 0.0]
+            for sy in range(samples):
+                for sx in range(samples):
+                    x = (px - left + (sx + 0.5) / samples) * scale
+                    y = (py - 4 + (sy + 0.5) / samples) * scale
+                    color = list(backdrop)
+                    if 0 <= x < SIZE // 2 and 0 <= y < SIZE:
+                        _, _, _, fa = half_disc_pixel(x - 0.5, y - 0.5, SIZE)
+                        color = [b + (f - b) * fa for b, f in zip(color, fill)]
+                        r, g, b, a = half_ring_pixel(x - 0.5, y - 0.5, SIZE)
+                        rim = [r, g, b]
+                        if panel == 1:
+                            grey = 0.299 * r + 0.587 * g + 0.114 * b
+                            rim = [grey * t for t in custom]
+                        color = [c + (m - c) * a for c, m in zip(color, rim)]
+                    for i in range(3):
+                        total[i] += color[i]
+            row.append([to_byte(t / samples**2) for t in total])
+        rows.append(row)
+    zoomed = []
+    for row in rows:
+        line = []
+        for pixel in row:
+            for _ in range(zoom):
+                line += pixel + [255]
+        zoomed += [line] * zoom
+    write_png(path, canvas_w * zoom, canvas_h * zoom, zoomed)
 
 
 def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 0.10)):
@@ -262,17 +330,20 @@ def write_preview(path, button=38, ring_scale=1.15, zoom=6, circle=(0.16, 0.14, 
     write_png(path, canvas * zoom, canvas * zoom, zoomed)
 
 
-SQUARE_MODES = {
+ART_MODES = {
     "--square": write_square,
     "--square-glow": write_square_glow,
     "--square-mask": write_square_mask,
     "--square-rounded": write_square_rounded,
+    "--half-ring": write_half_ring,
+    "--half-disc": write_half_disc,
+    "--half-ring-preview": write_half_ring_preview,
 }
 
 
 def main(argv):
-    if argv[:1] and argv[0] in SQUARE_MODES:
-        SQUARE_MODES[argv[0]](argv[1])
+    if argv[:1] and argv[0] in ART_MODES:
+        ART_MODES[argv[0]](argv[1])
         return 0
     write_ring(argv[0])
     write_preview(argv[1])

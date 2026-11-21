@@ -8,12 +8,18 @@ local Hud = ns.Hud or require("WhisperMessenger.UI.Theme.Hud")
 local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local Badge = ns.Badge or require("WhisperMessenger.UI.Badge")
 
--- The clickable icon tab on the screen edge: a dark fill with a chat icon,
--- rimmed on its three inner sides (Native HUD: a 2 px accent rim; custom: the
--- window's 1 px border), with the shared unread badge on its inner top corner.
+-- The clickable half disc on the screen edge (flat side on the edge): a fill
+-- in the window background with a chat icon, under a half ring (Native HUD:
+-- its own gold; custom: desaturated and tinted with the window border), with
+-- the shared unread badge on the upper inner curve. The art (drawn by
+-- scripts/compose_gold_ring.py) has its flat side on the left; the right edge
+-- mirrors it.
 local ScreenEdgeHandle = {}
 
-local HUD_RIM = 2
+ScreenEdgeHandle.FILL_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\half_disc_mask.png"
+ScreenEdgeHandle.RIM_TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\half_ring_gold.png"
+
+local WHITE = { 1, 1, 1, 1 }
 
 -- options: theme, onClick.
 function ScreenEdgeHandle.Create(factory, parent, options)
@@ -31,40 +37,50 @@ function ScreenEdgeHandle.Create(factory, parent, options)
 
   local fill = frame:CreateTexture(nil, "BACKGROUND")
   fill:SetAllPoints(frame)
-  local border = UIHelpers.createBorderBox(frame, nil, hud and HUD_RIM or 1)
+  fill:SetTexture(ScreenEdgeHandle.FILL_TEXTURE)
+  local rim = frame:CreateTexture(nil, "BORDER")
+  rim:SetAllPoints(frame)
+  rim:SetTexture(ScreenEdgeHandle.RIM_TEXTURE)
+  rim:SetDesaturated(not hud)
   local icon = frame:CreateTexture(nil, "ARTWORK")
   icon:SetTexture(theme.TEXTURES.nav_whispers_icon)
   icon:SetSize(layout.SCREEN_EDGE_HANDLE_ICON_SIZE, layout.SCREEN_EDGE_HANDLE_ICON_SIZE)
-  icon:SetPoint("CENTER", frame, "CENTER", 0, 0)
   local badge = Badge.Create(factory, frame, { size = layout.SCREEN_EDGE_HANDLE_BADGE_SIZE, outline = true })
 
-  local side
   local function paint(activeTheme)
     local colors = (activeTheme or theme).COLORS
-    UIHelpers.applyColorTexture(fill, colors.bg_primary)
-    UIHelpers.applyBorderBoxColor(border, hud and colors.accent or colors.window_border)
+    UIHelpers.applyVertexColor(fill, colors.bg_primary)
+    UIHelpers.applyVertexColor(rim, hud and WHITE or colors.window_border)
     UIHelpers.applyVertexColor(icon, colors.accent)
     badge.paint()
   end
 
-  local function setSide(nextSide)
-    side = nextSide
+  local function setSide(side)
     frame:ClearAllPoints()
+    icon:ClearAllPoints()
     badge.frame:ClearAllPoints()
-    if side ~= nil then
-      local point = side == "right" and "RIGHT" or "LEFT"
-      frame:SetPoint(point, parent, point)
-      -- The inner top corner, so the badge never reaches past the screen edge.
-      badge.frame:SetPoint("CENTER", frame, side == "right" and "TOPLEFT" or "TOPRIGHT", 0, 0)
+    local right = side == "right"
+    for _, tex in ipairs({ fill, rim }) do
+      tex:SetTexCoord(right and 1 or 0, right and 0 or 1, 0, 1)
     end
-    UIHelpers.setBorderEdgesShown(border, { top = true, bottom = true, left = side == "right", right = side ~= "right" })
+    if side == nil then
+      return
+    end
+    local point = right and "RIGHT" or "LEFT"
+    local inward = right and -1 or 1
+    frame:SetPoint(point, parent, point)
+    icon:SetPoint("CENTER", frame, point, inward * layout.SCREEN_EDGE_HANDLE_ICON_INSET, 0)
+    -- On the curve, inward from the edge, so the badge never reaches past the screen.
+    local offset = layout.SCREEN_EDGE_HANDLE_BADGE_OFFSET
+    badge.frame:SetPoint("CENTER", frame, point, inward * offset, offset)
   end
 
   paint()
 
   return {
     frame = frame,
-    border = border,
+    fill = fill,
+    rim = rim,
     icon = icon,
     badge = badge,
     setSide = setSide,

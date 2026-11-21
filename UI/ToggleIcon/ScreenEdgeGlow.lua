@@ -6,7 +6,8 @@ end
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 
--- A soft pulsing strip on the middle third of a screen edge, for unread
+-- A soft pulsing strip on the middle third of a screen edge (the full edge
+-- when there is no handle on it), for unread
 -- whispers while the window is closed. PulseGlow drives the fade; the texture
 -- is a half ellipse fading away from the edge.
 local ScreenEdgeGlow = {}
@@ -29,14 +30,14 @@ function ScreenEdgeGlow.Create(factory, parent, options)
   pulse.glowTexture:SetTexture(ScreenEdgeGlow.TEXTURE)
 
   -- The height is read every time: a UI-scale change moves the parent's height.
-  local function setSide(side)
+  local function setSide(side, fullHeight)
     frame:ClearAllPoints()
     if side == nil then
       return
     end
     local point = side == "right" and "RIGHT" or "LEFT"
     frame:SetPoint(point, parent, point)
-    frame:SetSize(theme.LAYOUT.SCREEN_EDGE_GLOW_DEPTH, parent:GetHeight() / 3)
+    frame:SetSize(theme.LAYOUT.SCREEN_EDGE_GLOW_DEPTH, fullHeight and parent:GetHeight() or parent:GetHeight() / 3)
     if side == "right" then
       pulse.glowTexture:SetTexCoord(1, 0, 0, 1)
     else
