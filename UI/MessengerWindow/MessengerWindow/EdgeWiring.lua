@@ -8,6 +8,7 @@ local CompactDock = ns.MessengerWindowCompactDock or require("WhisperMessenger.U
 local ScreenEdgeBorder = ns.MessengerWindowChromeBuilderScreenEdgeBorder
   or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.ScreenEdgeBorder")
 local BlizzardChrome = ns.MessengerWindowChromeBuilderBlizzard or require("WhisperMessenger.UI.MessengerWindow.ChromeBuilder.BlizzardChrome")
+local CompactViewport = ns.MessengerWindowLayoutCompactViewport or require("WhisperMessenger.UI.MessengerWindow.LayoutBuilder.CompactViewport")
 
 -- The compact window held against the left or right screen edge: full height,
 -- not movable, not resizable, no position saved, sliding out of the edge.
@@ -103,17 +104,39 @@ function EdgeWiring.Attach(edge, options)
   local gripWasShown = false
   local layout = options.layout
 
-  -- The HUD content area and the pane sizes follow the hidden borders.
+  -- At the edge the tab strip sits inside the window; the panes end above it
+  -- while it shows.
+  local function stripReserve(side)
+    if side and tabToggle and tabToggle.frame:IsShown() then
+      return tabToggle.frame:GetHeight()
+    end
+    return 0
+  end
+
+  -- The HUD content area, the panes' bottom and their sizes follow the hidden
+  -- borders and the strip. State is recorded before the relayout, which may
+  -- come back here.
   local function placeContent(side)
-    if layout.screenEdge == side then
+    local reserve = stripReserve(side)
+    if layout.screenEdge == side and (layout.bottomReserve or 0) == reserve then
       return
     end
     layout.screenEdge = side
+    layout.bottomReserve = reserve
     if frame.contentArea then
       BlizzardChrome.PlaceContentArea(frame.contentArea, frame, L, side)
     end
+    if layout.compactViewport then
+      CompactViewport.SetBottomReserve(layout.compactViewport, reserve, Theme)
+    end
     if edge.relayout then
       edge.relayout()
+    end
+  end
+
+  local function setStripInside(inside)
+    if tabToggle and tabToggle.setInside then
+      tabToggle.setInside(inside)
     end
   end
 
@@ -147,6 +170,7 @@ function EdgeWiring.Attach(edge, options)
         grip:Show()
       end
       border.apply(nil)
+      setStripInside(false)
       placeContent(nil)
       source:Hide()
       return true
@@ -161,8 +185,9 @@ function EdgeWiring.Attach(edge, options)
     if grip then
       grip:Hide()
     end
-    CompactDock.PlaceAtEdge(frame, side, tabToggle and tabToggle.hangHeight or 0)
+    CompactDock.PlaceAtEdge(frame, side)
     border.apply(side)
+    setStripInside(true)
     placeContent(side)
     anchorSource(side)
     source:Show()
@@ -172,6 +197,16 @@ function EdgeWiring.Attach(edge, options)
   frame:HookScript("OnShow", function()
     edge.apply()
   end)
+  -- TabLayout reads toggle.setShown at call time, so this runs on every change.
+  if tabToggle then
+    local setShown = tabToggle.setShown
+    tabToggle.setShown = function(shown)
+      setShown(shown)
+      if placedSide then
+        placeContent(placedSide)
+      end
+    end
+  end
   local applyWindowSize = scriptResult.applyWindowSize
   scriptResult.applyWindowSize = function(...)
     applyWindowSize(...)

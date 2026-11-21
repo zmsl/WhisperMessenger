@@ -55,12 +55,6 @@ return function()
     assert(toggle.frame.height == NativeTabToggle.HEIGHT, "HUD: strip is one tab tall")
   end
 
-  -- test_tab_strips_report_their_hang_height
-  do
-    assert(createToggle(FakeUI.NewFactory(), true).hangHeight == NativeTabToggle.HEIGHT - 2, "HUD hang is the tab height less the 2px border overlap")
-    assert(createToggle(FakeUI.NewFactory(), false).hangHeight == 24, "modern hang is 24")
-  end
-
   -- test_hud_strip_parented_to_the_given_parent
   do
     -- Anchored to the window so the tabs sit outside it; nothing on the way clips.

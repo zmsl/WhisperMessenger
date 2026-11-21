@@ -129,8 +129,7 @@ function NativeTabToggle.Create(factory, parent, options)
 
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetHeight(TAB_HEIGHT)
-  frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", WINDOW_LEFT_OFFSET, BORDER_OVERLAP)
-  frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, BORDER_OVERLAP)
+  TabLayout.Hang(frame, window, WINDOW_LEFT_OFFSET, BORDER_OVERLAP, false)
 
   local whispers = createModeTab(factory, frame, window, 1, "Whispers", "whispers")
   local groups = whispers and createModeTab(factory, frame, window, 2, "Groups", "groups")
@@ -141,7 +140,7 @@ function NativeTabToggle.Create(factory, parent, options)
     return nil
   end
   local tabs = { whispers, groups, requests, channels }
-  local toggle = { frame = frame, hangHeight = HANG_HEIGHT }
+  local toggle = { frame = frame }
   local scroller = TabScroller.Attach(factory, frame, {
     spacing = TAB_SPACING,
     endReserve = RIGHT_ART_OVERHANG,
@@ -188,12 +187,7 @@ function NativeTabToggle.Create(factory, parent, options)
 
   -- TabLayout applies the shown state through toggle.setShown, so the
   -- clamp follows it.
-  local applyClamp = TabLayout.BindClamp(window, HANG_HEIGHT)
-  local setShown = toggle.setShown
-  toggle.setShown = function(shown)
-    setShown(shown)
-    applyClamp(shown)
-  end
+  TabLayout.BindHang(toggle, frame, window, WINDOW_LEFT_OFFSET, BORDER_OVERLAP, HANG_HEIGHT)
   return toggle
 end
 

@@ -4,7 +4,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 local Hud = require("WhisperMessenger.UI.Theme.Hud")
 
 local L = Theme.LAYOUT
-local HANG = 24
+local STRIP = 24 -- the modern tab strip
 
 local function build(edgeSide, extra)
   extra = extra or {}
@@ -51,7 +51,7 @@ local function assertEdge(case, side, label)
   local edge = side == "right" and "RIGHT" or "LEFT"
   local top, bottom = points[#points - 1], points[#points]
   assert(samePoint(top, { "TOP" .. edge, case.parent, "TOP" .. edge, 0, 0 }), label .. ": top point " .. tostring(top[1]))
-  assert(samePoint(bottom, { "BOTTOM" .. edge, case.parent, "BOTTOM" .. edge, 0, HANG }), label .. ": bottom point " .. tostring(bottom[1]))
+  assert(samePoint(bottom, { "BOTTOM" .. edge, case.parent, "BOTTOM" .. edge, 0, 0 }), label .. ": bottom point " .. tostring(bottom[1]))
 end
 
 local SAVED = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 50, y = 700, width = 360, height = 640 }
@@ -280,6 +280,33 @@ return function()
     assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -insets.right, insets.bottom }), "off: template insets back")
     assert(case.window.contactsPane.width == width - insets.left - insets.right - edges, "off: panes clear both borders again")
     Hud.Configure("off")
+  end
+
+  -- test_docked_strip_sits_inside_the_window_above_the_screen_bottom
+  do
+    local case = shown("left")
+    local strip = case.window.tabToggle.frame
+    assert(strip:IsShown(), "two tabs: the strip shows")
+    assert(samePoint(strip.points[1], { "BOTTOMLEFT", case.frame, "BOTTOMLEFT", 8, 0 }), "strip on the window's bottom edge")
+    local viewport = case.window.compactViewport
+    assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -1, 1 + STRIP }), "panes end above the strip")
+    assert(select(4, case.frame:GetClampRectInsets()) == 0, "no clamp reach below the screen")
+    local paneHeight = case.frame:GetHeight() - Theme.TOP_BAR_HEIGHT - STRIP
+    assert(case.window.contactsPane.height == paneHeight, "panes laid out above the strip, got " .. tostring(case.window.contactsPane.height))
+
+    -- test_hidden_strip_lets_the_content_reach_the_bottom
+    case.window.setOptionsVisible(true)
+    assert(not strip:IsShown(), "settings hide the strip")
+    assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -1, 1 }), "content to the bottom")
+    case.window.setOptionsVisible(false)
+    assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -1, 1 + STRIP }), "strip back, room kept again")
+
+    -- test_off_hangs_the_strip_below_the_window_again
+    case.config.screenEdge = "off"
+    case.window.applyScreenEdge(savedSpot())
+    assert(samePoint(strip.points[1], { "TOPLEFT", case.frame, "BOTTOMLEFT", 8, 0 }), "strip hangs again")
+    assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -1, 1 }), "no room kept")
+    assert(select(4, case.frame:GetClampRectInsets()) == -STRIP, "clamp reaches the hanging strip again")
   end
 
   -- test_no_side_window_is_unchanged

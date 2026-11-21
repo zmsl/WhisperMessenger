@@ -147,8 +147,7 @@ function TabToggle.Create(factory, parent, options)
   local window = options.windowFrame or parent
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetHeight(TAB_HEIGHT)
-  frame:SetPoint("TOPLEFT", window, "BOTTOMLEFT", HANG_LEFT_OFFSET, 0)
-  frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, 0)
+  TabLayout.Hang(frame, window, HANG_LEFT_OFFSET, 0, false)
 
   local byMode = {
     whispers = createTab(factory, frame, "Whispers", "whispers"),
@@ -156,7 +155,7 @@ function TabToggle.Create(factory, parent, options)
     requests = createTab(factory, frame, "Requests", "requests"),
     channels = createTab(factory, frame, "Channels", "channels"),
   }
-  local toggle = { frame = frame, hangHeight = TAB_HEIGHT }
+  local toggle = { frame = frame }
   local scroller = TabScroller.Attach(factory, frame, {
     spacing = HANG_SPACING,
     endReserve = 0,
@@ -223,12 +222,7 @@ function TabToggle.Create(factory, parent, options)
 
   -- TabLayout applies the shown state through toggle.setShown, so the
   -- clamp follows it.
-  local applyClamp = TabLayout.BindClamp(window, TAB_HEIGHT)
-  local setShown = toggle.setShown
-  toggle.setShown = function(shown)
-    setShown(shown)
-    applyClamp(shown)
-  end
+  TabLayout.BindHang(toggle, frame, window, HANG_LEFT_OFFSET, 0, TAB_HEIGHT)
   return toggle
 end
 

@@ -50,14 +50,14 @@ function CompactDock.Center(frame)
   frame:SetPoint("TOPLEFT", frame:GetParent() or _G.UIParent, "CENTER", -L.COMPACT_WINDOW_WIDTH / 2, L.COMPACT_WINDOW_HEIGHT / 2)
 end
 
--- The full-height placement against a screen edge. hang is the tab strip's
--- height below the window, kept on screen, in the window's own units.
-function CompactDock.PlaceAtEdge(frame, side, hang)
+-- The full-height placement against a screen edge (the tab strip sits inside
+-- the window there).
+function CompactDock.PlaceAtEdge(frame, side)
   local parent = frame:GetParent() or _G.UIParent
   local edge = side == "right" and "RIGHT" or "LEFT"
   frame:ClearAllPoints()
   frame:SetPoint("TOP" .. edge, parent, "TOP" .. edge, 0, 0)
-  frame:SetPoint("BOTTOM" .. edge, parent, "BOTTOM" .. edge, 0, hang)
+  frame:SetPoint("BOTTOM" .. edge, parent, "BOTTOM" .. edge, 0, 0)
 end
 
 -- The corner spot sticks out past the window's corner; the screen clamp only

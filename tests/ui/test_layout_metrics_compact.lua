@@ -34,6 +34,13 @@ return function()
     assert(result.contactsHeight == 640 - insets.top, "no bottom border, got " .. tostring(result.contactsHeight))
   end
 
+  -- test_bottom_reserve_shortens_the_panes
+  do
+    local plain = Metrics.CalculateRelayout({ compactLayout = true }, 360, 640, 180, Theme)
+    local result = Metrics.CalculateRelayout({ compactLayout = true, bottomReserve = 24 }, 360, 640, 180, Theme)
+    assert(result.contactsHeight == plain.contactsHeight - 24, "panes end above the strip, got " .. tostring(result.contactsHeight))
+  end
+
   -- test_wide_compact_window_lays_settings_out_like_the_classic_window
   do
     local wide = Metrics.CalculateRelayout({ compactLayout = true, compactWide = true }, 900, 640, 180, Theme)
