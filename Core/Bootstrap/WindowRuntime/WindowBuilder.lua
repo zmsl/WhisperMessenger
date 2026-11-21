@@ -106,10 +106,19 @@ local function hideAndHook(window, options)
   -- ESC and the game's close-all hide the frame without setWindowVisible:
   -- acknowledge on every hide so a whisper read in the pane never pops on
   -- the widget after the window closes.
+  -- The edge glow stops while the window shows and returns when it hides.
+  local function refreshEdgeSurface()
+    local edge = options.surfaces.getEdgeSurface and options.surfaces.getEdgeSurface()
+    if edge then
+      edge.refresh()
+    end
+  end
   if window.frame.HookScript then
     window.frame:HookScript("OnHide", function()
       options.acknowledgeLatestWidgetPreview(options.buildContacts())
+      refreshEdgeSurface()
     end)
+    window.frame:HookScript("OnShow", refreshEdgeSurface)
   end
 end
 
