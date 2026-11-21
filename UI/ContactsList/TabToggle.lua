@@ -156,7 +156,7 @@ function TabToggle.Create(factory, parent, options)
     requests = createTab(factory, frame, "Requests", "requests"),
     channels = createTab(factory, frame, "Channels", "channels"),
   }
-  local toggle = { frame = frame }
+  local toggle = { frame = frame, hangHeight = TAB_HEIGHT }
   local scroller = TabScroller.Attach(factory, frame, {
     spacing = HANG_SPACING,
     endReserve = 0,

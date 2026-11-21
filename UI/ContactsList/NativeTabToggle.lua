@@ -141,7 +141,7 @@ function NativeTabToggle.Create(factory, parent, options)
     return nil
   end
   local tabs = { whispers, groups, requests, channels }
-  local toggle = { frame = frame }
+  local toggle = { frame = frame, hangHeight = HANG_HEIGHT }
   local scroller = TabScroller.Attach(factory, frame, {
     spacing = TAB_SPACING,
     endReserve = RIGHT_ART_OVERHANG,
