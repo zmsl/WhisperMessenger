@@ -18,6 +18,7 @@ local WindowSizing = ns.MessengerWindowWindowSizing or require("WhisperMessenger
 local WindowSurface = ns.MessengerWindowWindowSurface or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.WindowSurface")
 local CompactWiring = ns.MessengerWindowCompactWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.CompactWiring")
 local DockWiring = ns.MessengerWindowDockWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.DockWiring")
+local EdgeWiring = ns.MessengerWindowEdgeWiring or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.EdgeWiring")
 local SavedStateApply = ns.MessengerWindowSavedStateApply or require("WhisperMessenger.UI.MessengerWindow.MessengerWindow.SavedStateApply")
 
 local MessengerWindow = {}
@@ -34,6 +35,7 @@ function MessengerWindow.Create(factory, options)
   local settingsPanels = settingsRuntime.settingsPanels
   local compactMode = CompactWiring.Hooks()
   local dock = DockWiring.Hooks()
+  local edge = EdgeWiring.Hooks()
   local rowActions = RowActions.Collect(options)
 
   local function isShown(target)
@@ -132,7 +134,7 @@ function MessengerWindow.Create(factory, options)
   local isComposerFocusHeld = composerRuntime.isComposerFocusHeld
 
   local wrappedPosition, onResetWindowPosition = CompactWiring.WrapPosition(compactMode, options)
-  local onPositionChanged = DockWiring.WrapPosition(dock, wrappedPosition)
+  local onPositionChanged = DockWiring.WrapPosition(dock, EdgeWiring.WrapPosition(edge, wrappedPosition))
 
   local relayoutWindow, scriptResult = LifecycleWiring.Setup({
     layout = layout,
@@ -194,6 +196,15 @@ function MessengerWindow.Create(factory, options)
     end,
   })
   panelWiring.hookWindowHide()
+  EdgeWiring.Attach(edge, {
+    factory = factory,
+    frame = frame,
+    chrome = chrome,
+    tabToggle = contactsRuntime.tabToggle,
+    settingsConfig = settingsConfig,
+    compactLayout = compactLayout,
+    scriptResult = scriptResult,
+  })
   contactsRail = ContactsRail.Create({
     frame = frame,
     layout = layout,
@@ -251,11 +262,12 @@ function MessengerWindow.Create(factory, options)
     hooks = dock,
     factory = factory,
     chrome = chrome,
-    windowOptions = options,
+    windowOptions = EdgeWiring.DockOptions(edge, options),
     windowAlpha = windowAlpha,
     onPositionChanged = onPositionChanged,
     buildState = windowGeometry.buildState,
   })
+  EdgeWiring.Bind(edge, dock, applySavedState)
   -- One relayout at build, so a bar height reported before the first resize moves the panes.
   windowSizing.relayoutCurrentSize()
 
@@ -297,6 +309,7 @@ function MessengerWindow.Create(factory, options)
     compactMode = compactLayout and compactMode or nil,
     dock = dock.dock,
     applySavedState = applySavedState,
+    applyScreenEdge = edge.applyLive,
   })
 end
 

@@ -492,6 +492,7 @@ UI/MessengerWindow/MessengerWindow/WindowGrowAnimation.lua
 UI/MessengerWindow/MessengerWindow/CompactDockFlow.lua
 UI/MessengerWindow/MessengerWindow/CompactWiring.lua
 UI/MessengerWindow/MessengerWindow/DockWiring.lua
+UI/MessengerWindow/MessengerWindow/EdgeWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua

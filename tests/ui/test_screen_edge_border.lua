@@ -124,6 +124,18 @@ return function()
     assert(not shade:IsShown(), "hidden when off")
   end
 
+  -- test_shade_level_follows_a_raised_window
+  do
+    local factory, frame = build()
+    frame:SetFrameLevel(5)
+    local border = ScreenEdgeBorder.Create(factory, frame, nil)
+    border.apply("left")
+    local shade = frame.children[#frame.children]
+    frame:SetFrameLevel(40)
+    border.apply("left")
+    assert(shade:GetFrameLevel() == 65, "level re-set to frame + 25, got " .. tostring(shade:GetFrameLevel()))
+  end
+
   -- test_missing_pieces_are_skipped
   do
     local factory, frame = build()

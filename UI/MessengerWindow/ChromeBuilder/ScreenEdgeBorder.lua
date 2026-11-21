@@ -52,11 +52,12 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges)
     if not shade then
       shade = factory.CreateFrame("Frame", nil, frame)
       shade:EnableMouse(false)
-      shade:SetFrameLevel(frame:GetFrameLevel() + SHADE_LEVEL_ABOVE_PANES)
       shade:SetWidth(Theme.LAYOUT.SCREEN_EDGE_SHADE_WIDTH)
       shadeTexture = shade:CreateTexture(nil, "OVERLAY")
       shadeTexture:SetAllPoints(shade)
     end
+    -- Every apply: the window may have been raised since.
+    shade:SetFrameLevel(frame:GetFrameLevel() + SHADE_LEVEL_ABOVE_PANES)
     local edge = side == "right" and "RIGHT" or "LEFT"
     shade:ClearAllPoints()
     shade:SetPoint("TOP" .. edge, frame, "TOP" .. edge, 0, 0)
