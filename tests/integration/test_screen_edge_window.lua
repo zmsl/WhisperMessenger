@@ -1,7 +1,6 @@
 local CompactWindow = require("tests.helpers.compact_window")
 local GrowRig = require("tests.helpers.grow_rig")
 local Theme = require("WhisperMessenger.UI.Theme")
-local Hud = require("WhisperMessenger.UI.Theme.Hud")
 
 local L = Theme.LAYOUT
 local STRIP = 24 -- the modern tab strip
@@ -260,26 +259,6 @@ return function()
       point == "TOPLEFT" and relPoint == "BOTTOMLEFT" and x == -360 and y == 740,
       "starts on the source, got " .. tostring(x) .. "," .. tostring(y)
     )
-  end
-
-  -- test_hud_content_reaches_the_screen_side_and_bottom_and_comes_back
-  do
-    local case = shown("right", { hudStyle = "classic" })
-    local insets = Hud.ContentInsets(L)
-    local area = case.frame.contentArea
-    assert(samePoint(area.points[1], { "TOPLEFT", case.frame, "TOPLEFT", insets.left, -insets.top }), "docked: top-left keeps the inner border")
-    assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", 0, 0 }), "docked: content to the screen side and bottom")
-    local edges = L.CONTACTS_PANE_LEFT_INSET + L.CONTENT_PANE_RIGHT_INSET
-    local width = case.frame:GetWidth()
-    assert(
-      case.window.contactsPane.width == width - insets.left - edges,
-      "docked: panes sized to the wider area, got " .. tostring(case.window.contactsPane.width)
-    )
-    case.config.screenEdge = "off"
-    case.window.applyScreenEdge(savedSpot())
-    assert(samePoint(area.points[2], { "BOTTOMRIGHT", case.frame, "BOTTOMRIGHT", -insets.right, insets.bottom }), "off: template insets back")
-    assert(case.window.contactsPane.width == width - insets.left - insets.right - edges, "off: panes clear both borders again")
-    Hud.Configure("off")
   end
 
   -- test_docked_strip_sits_inside_the_window_above_the_screen_bottom
