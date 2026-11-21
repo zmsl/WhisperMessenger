@@ -48,8 +48,7 @@ function TabLayout.BindClamp(window, hangHeight)
   end
 end
 
--- Places the strip: hanging below the window (left px in, overlapping its
--- bottom border by overlap px) or, inside, on the window's bottom edge.
+-- Hangs the strip below the window (left px in, overlap px up), or inside on its bottom edge.
 function TabLayout.Hang(frame, window, left, overlap, inside)
   frame:ClearAllPoints()
   if inside then
@@ -61,9 +60,8 @@ function TabLayout.Hang(frame, window, left, overlap, inside)
   frame:SetPoint("TOPRIGHT", window, "BOTTOMRIGHT", 0, overlap)
 end
 
--- After BindController: the screen clamp follows toggle.setShown while the
--- strip hangs, and toggle.setInside(inside) moves it inside the window's
--- bottom edge (a window held at a screen edge), where it needs no clamp.
+-- After BindController: the clamp follows toggle.setShown while the strip hangs;
+-- toggle.setInside(true) (window at a screen edge) moves it inside, with no clamp.
 function TabLayout.BindHang(toggle, frame, window, left, overlap, hangHeight)
   local applyClamp = TabLayout.BindClamp(window, hangHeight)
   local inside = false
