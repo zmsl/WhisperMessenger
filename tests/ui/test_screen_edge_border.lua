@@ -173,6 +173,22 @@ return function()
     end
   end
 
+  -- test_retail_portrait_and_its_ring_hide_on_either_side
+  do
+    local factory, frame = build()
+    frame.NineSlice = factory.CreateFrame("Frame", nil, frame)
+    local p = withPieces(frame.NineSlice, frame.NineSlice, RETAIL)
+    frame.PortraitContainer = factory.CreateFrame("Frame", nil, frame)
+    frame.PortraitContainer:Show()
+    local border = ScreenEdgeBorder.Create(factory, frame, nil)
+    for _, side in ipairs({ "left", "right" }) do
+      border.apply(side)
+      assert(hidden(frame.PortraitContainer, p.TopLeftCorner), side .. ": portrait and its ring corner hidden")
+      border.apply(nil)
+      assert(shown(frame.PortraitContainer, p.TopLeftCorner), side .. ": both back when off")
+    end
+  end
+
   -- test_off_restores_only_what_it_hid
   do
     local factory, frame = build()

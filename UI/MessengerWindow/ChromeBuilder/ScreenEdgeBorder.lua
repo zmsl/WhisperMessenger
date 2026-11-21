@@ -60,6 +60,9 @@ local function screenSidePieces(frame, windowEdges, side)
   end
   collect(pieces, frame, CLASSIC_KEYS, CLASSIC_SIDE_KEYS[side])
   collect(pieces, frame.NineSlice, RETAIL_KEYS, RETAIL_SIDE_KEYS[side])
+  -- The portrait is the floating button's slot; at the edge the button stays
+  -- home, so it goes with its ring (NineSlice.TopLeftCorner, above).
+  pieces[#pieces + 1] = frame.PortraitContainer
   for _, key in ipairs(PANEL_INSETS) do
     collect(pieces, frame[key] and frame[key].NineSlice, INSET_KEYS, INSET_SIDE_KEYS[side])
   end
