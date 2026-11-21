@@ -52,6 +52,8 @@ local BACKGROUND_KEYS = { "Bg", "InsetBg" }
 -- The side tile on the inner side, by screen side (Classic frame, Retail NineSlice).
 local INNER_TILE_KEYS = { left = "RightBorder", right = "LeftBorder" }
 local INNER_EDGE_KEYS = { left = "RightEdge", right = "LeftEdge" }
+-- The inset's line on the inner side; its corners are hidden (CLASSIC_KEYS).
+local INNER_INSET_KEYS = { left = "InsetBorderRight", right = "InsetBorderLeft" }
 local CLOSE_INSET = 4
 
 local function collect(pieces, owner, keys, sideKeys)
@@ -124,6 +126,17 @@ local function runFullHeight(region)
   region:ClearAllPoints()
   for _, p in ipairs(saved) do
     region:SetPoint(p[1], p[2], p[1], p[4], 0)
+  end
+  return saved
+end
+
+-- The inner inset line on InsetBg's own edge, which reaches the frame top and
+-- bottom while docked (stretch), instead of between its hidden corners.
+local function runInsetFullHeight(region, frame)
+  local saved = readPoints(region)
+  region:ClearAllPoints()
+  for _, p in ipairs(saved) do
+    region:SetPoint(p[1], frame.InsetBg, p[1], 0, 0)
   end
   return saved
 end
@@ -232,6 +245,9 @@ function ScreenEdgeBorder.Create(factory, frame, windowEdges, look)
     end
     move(frame[INNER_TILE_KEYS[side]], runFullHeight)
     move(frame.NineSlice and frame.NineSlice[INNER_EDGE_KEYS[side]], runFullHeight)
+    if frame.InsetBg then
+      move(frame[INNER_INSET_KEYS[side]], runInsetFullHeight)
+    end
     move(frame.CloseButton, moveCloseInside)
     paintTitleDivider()
     paintShade(side)

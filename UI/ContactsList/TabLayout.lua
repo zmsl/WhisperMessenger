@@ -65,6 +65,7 @@ end
 function TabLayout.BindHang(toggle, frame, window, left, overlap, hangHeight)
   local applyClamp = TabLayout.BindClamp(window, hangHeight)
   local inside = false
+  toggle.overlap = overlap
   local setShown = toggle.setShown
   toggle.setShown = function(shown)
     setShown(shown)

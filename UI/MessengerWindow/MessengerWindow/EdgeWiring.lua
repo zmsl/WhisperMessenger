@@ -116,7 +116,7 @@ function EdgeWiring.Attach(edge, options)
   -- panes end above the band while the strip shows.
   local function stripReserve(side)
     if side and tabToggle and tabToggle.frame:IsShown() then
-      return band.show(tabToggle.frame:GetHeight())
+      return band.show(tabToggle.frame:GetHeight(), tabToggle.overlap)
     end
     band.hide()
     return 0

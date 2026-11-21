@@ -30,6 +30,7 @@ NativeTabToggle.HEIGHT = TAB_HEIGHT
 -- window's bottom-left, tab tops overlap the bottom border by 2px, 1px apart.
 local WINDOW_LEFT_OFFSET = 11
 local BORDER_OVERLAP = 2
+NativeTabToggle.BORDER_OVERLAP = BORDER_OVERLAP
 local TAB_SPACING = 1
 -- How far the tabs reach below the window; the screen clamp must include it.
 local HANG_HEIGHT = TAB_HEIGHT - BORDER_OVERLAP

@@ -5,7 +5,7 @@ local Theme = require("WhisperMessenger.UI.Theme")
 -- the window in a darkened band; off the edge it hangs below as before.
 local L = Theme.LAYOUT
 local STRIP = 24 -- the modern tab strip
-local BAND = L.SCREEN_EDGE_TAB_BAND_PAD_TOP + STRIP + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
+local BAND = 1 + STRIP + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM -- flush under the 1 px divider (no overlap)
 
 -- The darkened band the tabs sit in while docked: on the window's bottom edge.
 local function band(case)

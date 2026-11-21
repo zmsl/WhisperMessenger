@@ -238,4 +238,55 @@ return function()
     border.apply("left")
     border.apply(nil)
   end
+
+  -- test_inner_inset_line_runs_frame_top_to_bottom_while_docked
+  do
+    local factory, frame = build()
+    local insetBg = frame:CreateTexture(nil, "BACKGROUND")
+    insetBg:SetPoint("TOPLEFT", frame, "TOPLEFT", 4, -24)
+    insetBg:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 4)
+    frame.InsetBg = insetBg
+    local p = withPieces(frame, frame, {
+      "InsetBorderTopLeft",
+      "InsetBorderTopRight",
+      "InsetBorderBottomLeft",
+      "InsetBorderBottomRight",
+      "InsetBorderLeft",
+      "InsetBorderRight",
+    })
+    -- BasicFrameTemplateWithInset's anchors (UIPanelTemplates.xml, forever).
+    p.InsetBorderLeft:SetPoint("TOPLEFT", p.InsetBorderTopLeft, "BOTTOMLEFT", 0, 0)
+    p.InsetBorderLeft:SetPoint("BOTTOMLEFT", p.InsetBorderBottomLeft, "TOPLEFT", 0, 0)
+    p.InsetBorderRight:SetPoint("TOPRIGHT", p.InsetBorderTopRight, "BOTTOMRIGHT", 0, 0)
+    p.InsetBorderRight:SetPoint("BOTTOMRIGHT", p.InsetBorderBottomRight, "TOPRIGHT", 0, 0)
+    local function pointsAre(region, want, label)
+      assert(region:GetNumPoints() == #want, label .. ": point count")
+      for i, w in ipairs(want) do
+        local point, rel, relPoint, x, y = region:GetPoint(i)
+        assert(point == w[1] and rel == w[2] and relPoint == w[3] and x == 0 and y == 0, label .. ": point " .. i .. " " .. tostring(relPoint))
+      end
+    end
+    local border = ScreenEdgeBorder.Create(factory, frame, nil)
+    border.apply("right")
+    assert(shown(p.InsetBorderLeft) and hidden(p.InsetBorderTopLeft, p.InsetBorderBottomLeft), "right: inner line stays, its corners go")
+    pointsAre(p.InsetBorderLeft, { { "TOPLEFT", insetBg, "TOPLEFT" }, { "BOTTOMLEFT", insetBg, "BOTTOMLEFT" } }, "right: inner line full height")
+    local _, _, _, _, top = insetBg:GetPoint(1)
+    local _, _, _, _, bottom = insetBg:GetPoint(2)
+    assert(top == 0 and bottom == 0, "the inset background spans frame top to bottom")
+    border.apply("left")
+    assert(shown(p.InsetBorderRight) and hidden(p.InsetBorderTopRight, p.InsetBorderBottomRight), "left: inner line stays, its corners go")
+    pointsAre(p.InsetBorderRight, { { "TOPRIGHT", insetBg, "TOPRIGHT" }, { "BOTTOMRIGHT", insetBg, "BOTTOMRIGHT" } }, "left: inner line full height")
+    pointsAre(
+      p.InsetBorderLeft,
+      { { "TOPLEFT", p.InsetBorderTopLeft, "BOTTOMLEFT" }, { "BOTTOMLEFT", p.InsetBorderBottomLeft, "TOPLEFT" } },
+      "left: the other line back on its corners"
+    )
+    border.apply(nil)
+    pointsAre(
+      p.InsetBorderRight,
+      { { "TOPRIGHT", p.InsetBorderTopRight, "BOTTOMRIGHT" }, { "BOTTOMRIGHT", p.InsetBorderBottomRight, "TOPRIGHT" } },
+      "off: line back on its corners"
+    )
+    assert(shown(p.InsetBorderTopLeft, p.InsetBorderTopRight, p.InsetBorderBottomLeft, p.InsetBorderBottomRight), "off: corners back")
+  end
 end

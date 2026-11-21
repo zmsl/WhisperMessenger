@@ -8,7 +8,8 @@ local NativeTabToggle = require("WhisperMessenger.UI.ContactsList.NativeTabToggl
 -- The Native HUD (Classic template) window held at a screen edge: content and
 -- tab strip against the screen side and bottom, all back when it goes off.
 local L = Theme.LAYOUT
-local BAND = L.SCREEN_EDGE_TAB_BAND_PAD_TOP + NativeTabToggle.HEIGHT + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
+-- The bevel (3 px), then the tabs tucked BORDER_OVERLAP up under it, then the bottom pad.
+local BAND = L.SCREEN_EDGE_DIVIDER_HEIGHT - NativeTabToggle.BORDER_OVERLAP + NativeTabToggle.HEIGHT + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
 local EDGES = L.CONTACTS_PANE_LEFT_INSET + L.CONTENT_PANE_RIGHT_INSET
 local SAVED = { anchorPoint = "TOPLEFT", relativePoint = "BOTTOMLEFT", x = 50, y = 700, width = 360, height = 640 }
 
@@ -72,7 +73,7 @@ return function()
   end)
 
   -- test_hud_tabs_sit_inside_the_docked_window_and_hang_again_off
-  do
+  BevelAtlas.With(function()
     local case = shown("left")
     local strip = case.window.tabToggle.frame
     local viewport = case.window.compactViewport
@@ -81,7 +82,7 @@ return function()
     goOff(case)
     assert(samePoint(strip.points[1], { "TOPLEFT", case.frame, "BOTTOMLEFT", 11, 2 }), "HUD tabs hang again")
     assert(samePoint({ viewport:GetPoint() }, { "BOTTOMRIGHT", case.frame.contentArea, "BOTTOMRIGHT", -1, 1 }), "no room kept")
-  end
+  end)
 
   Hud.Configure("off")
 end

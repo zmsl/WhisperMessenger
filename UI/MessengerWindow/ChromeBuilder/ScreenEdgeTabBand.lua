@@ -8,8 +8,8 @@ local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local NativeArt = ns.UIHelpersNativeArt or require("WhisperMessenger.UI.Helpers.NativeArt")
 
 -- The band at the bottom of a window held at a screen edge that the tab strip
--- sits in: the window background darkened, a divider along its top, and room
--- above and below the tabs so Blizzard's tab art is never cut by the screen.
+-- sits in: the window background darkened, a divider along its top that the
+-- tabs hang from, and room below them so the tab art is never cut by the screen.
 local ScreenEdgeTabBand = {}
 
 local DARKEN = { 0, 0, 0, 0.5 }
@@ -38,9 +38,11 @@ function ScreenEdgeTabBand.Create(factory, frame, look)
     frame = band,
     fill = fill,
     divider = divider,
-    -- Shows the band around a strip this tall; returns the band's height.
-    show = function(stripHeight)
-      local height = L.SCREEN_EDGE_TAB_BAND_PAD_TOP + stripHeight + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
+    -- Shows the band around a strip this tall whose top hangs from the
+    -- divider's bottom, tucked overlap px up under it; returns the band's height.
+    show = function(stripHeight, overlap)
+      local dividerHeight = dividerIsLine and 1 or L.SCREEN_EDGE_DIVIDER_HEIGHT
+      local height = dividerHeight - (overlap or 0) + stripHeight + L.SCREEN_EDGE_TAB_BAND_PAD_BOTTOM
       band:SetHeight(height)
       UIHelpers.applyColorTexture(fill, DARKEN)
       if dividerIsLine then
