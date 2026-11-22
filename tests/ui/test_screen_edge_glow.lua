@@ -1,5 +1,5 @@
 -- The edge glow surface: lit only while the window is hidden and whispers are
--- unread, on the middle third of the chosen screen edge.
+-- unread, along the full height of the chosen screen edge.
 local AnimatedFactory = require("tests.helpers.animated_factory")
 local ScreenEdgeGlow = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeGlow")
 local ScreenEdgeSurface = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeSurface")
@@ -20,7 +20,6 @@ local function build(settings)
     isWindowShown = function()
       return state.shown
     end,
-    onClick = function() end,
   })
   return surface, state, settings, parent
 end
@@ -63,13 +62,13 @@ return function()
     assert(surface.glow.pulse.animation.playing == false, "no side, no glow")
   end
 
-  local function test_glow_covers_the_middle_third_of_the_left_edge()
+  local function test_glow_covers_the_full_left_edge()
     local surface, _, _, parent = build()
     local frame = surface.glow.frame
     local p = frame.point
     assert(p[1] == "LEFT" and p[2] == parent and p[3] == "LEFT", "anchored LEFT to the parent's LEFT")
     assert(frame.width == 48, "48 px deep, got " .. tostring(frame.width))
-    assert(frame.height == 360, "a third of 1080, got " .. tostring(frame.height))
+    assert(frame.height == 1080, "the full 1080, got " .. tostring(frame.height))
     assert(frame.mouseEnabled == false, "the glow takes no mouse")
     assert(frame.frameStrata == "BACKGROUND", "background strata")
   end
@@ -90,23 +89,17 @@ return function()
     assert(c[1] == 0 and c[2] == 1 and c[3] == 0 and c[4] == 1, "plain texture coordinates")
   end
 
-  local function test_glow_runs_the_full_edge_while_the_handle_is_off()
-    local surface, _, settings = build({ edgeHandle = false })
-    local frame = surface.glow.frame
-    assert(frame.width == 48 and frame.height == 1080, "handle off: full height, got " .. tostring(frame.height))
-    settings.edgeHandle = true
-    surface.refresh()
-    assert(frame.width == 48 and frame.height == 360, "handle back on: the middle third again, got " .. tostring(frame.height))
-    settings.edgeHandle = false
-    surface.refresh()
-    assert(frame.height == 1080, "live flip to off: full height again, got " .. tostring(frame.height))
+  local function test_there_is_no_handle()
+    local surface = build()
+    assert(surface.handle == nil, "the surface has no handle")
+    assert(pcall(require, "WhisperMessenger.UI.ToggleIcon.ScreenEdgeHandle") == false, "no handle module")
   end
 
   local function test_glow_follows_a_parent_height_change()
     local surface, _, _, parent = build()
     parent:SetSize(1920, 900)
     surface.refresh()
-    assert(surface.glow.frame.height == 300, "a third of 900, got " .. tostring(surface.glow.frame.height))
+    assert(surface.glow.frame.height == 900, "the full 900, got " .. tostring(surface.glow.frame.height))
   end
 
   local function test_glow_uses_the_edge_texture_and_the_slow_cycle()
@@ -129,12 +122,12 @@ return function()
   end
 
   test_glows_while_hidden_with_unread_whispers()
-  test_glow_runs_the_full_edge_while_the_handle_is_off()
+  test_there_is_no_handle()
   test_no_glow_while_the_window_shows()
   test_panel_badges_alone_do_not_glow()
   test_edge_glow_off_stops_it()
   test_no_side_no_glow()
-  test_glow_covers_the_middle_third_of_the_left_edge()
+  test_glow_covers_the_full_left_edge()
   test_right_edge_glow_is_mirrored()
   test_left_edge_glow_is_not_mirrored()
   test_glow_follows_a_parent_height_change()

@@ -72,9 +72,6 @@ local function tint(texture, themed)
   applyVertexColor(texture, themed and Theme.COLORS.accent or WHITE)
 end
 
--- Also tints the screen edge handle's rim, so it matches the button's border.
-IconBorder.Tint = tint
-
 local function paintRing(ring, frame, look, side, ringScale)
   if look ~= "rim" and look ~= "ring" then
     ring:Hide()

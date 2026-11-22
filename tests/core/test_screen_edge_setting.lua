@@ -36,23 +36,13 @@ return function()
   end
 
   -- test_each_key_builds_and_refreshes_the_surface
-  -- (the Icons-page look keys repaint the handle, like the floating button)
-  for _, key in ipairs({
-    "screenEdge",
-    "edgeGlow",
-    "edgeHandle",
-    "widgetShape",
-    "iconBorder",
-    "iconBackground",
-    "iconBorderThemed",
-    "widgetTransparency",
-  }) do
+  for _, key in ipairs({ "screenEdge", "edgeGlow" }) do
     local case = build(true)
     ScreenEdgeSetting.Apply(case.ctx, key, key == "screenEdge" and "right" or false)
     assert(case.ensured == 1 and case.updated == 1, key .. " builds and refreshes the surface")
   end
 
-  -- test_glow_and_handle_do_not_move_the_window
+  -- test_glow_does_not_move_the_window
   do
     local case = build(true)
     ScreenEdgeSetting.Apply(case.ctx, "edgeGlow", false)
@@ -62,7 +52,9 @@ return function()
   -- test_other_keys_do_nothing
   do
     local case = build(true)
-    ScreenEdgeSetting.Apply(case.ctx, "iconDock", true)
+    for _, key in ipairs({ "iconDock", "edgeHandle", "widgetShape", "iconBorder", "iconBackground", "iconBorderThemed", "widgetTransparency" }) do
+      ScreenEdgeSetting.Apply(case.ctx, key, true)
+    end
     assert(#case.applied == 0 and case.ensured == 0 and case.updated == 0, "ignored")
   end
 

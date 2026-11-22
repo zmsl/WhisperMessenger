@@ -30,28 +30,6 @@ end
 IconRuntime.ResolveAutoDismissSeconds = resolveAutoDismissSeconds
 IconRuntime.ResolvePreviewPosition = resolvePreviewPosition
 
--- The Icons-page look getters, shared by the floating button and the screen
--- edge handle so both read the settings the same way.
-function IconRuntime.LookGetters(settings)
-  return {
-    getIconBackground = function()
-      return settings.iconBackground ~= false
-    end,
-    getIconBorder = function()
-      return settings.iconBorder ~= false
-    end,
-    getIconBorderThemed = function()
-      return settings.iconBorderThemed ~= false
-    end,
-    getWidgetShape = function()
-      return settings.widgetShape == "square" and "square" or "circle"
-    end,
-    getWidgetTransparency = function()
-      return settings.widgetTransparency or 0
-    end,
-  }
-end
-
 -- panelRegistry: a surface created after panels registered shows their
 -- badges at once, not on the next icon refresh.
 local function initializeIconState(icon, contacts, panelRegistry, buildLatestIncomingPreview)
@@ -97,7 +75,6 @@ function IconRuntime.Create(options)
     return refreshWindow()
   end
 
-  local looks = IconRuntime.LookGetters(settings)
   local icon = toggleIcon.Create(uiFactory, {
     state = positionSlots.read("icon"),
     iconSize = settings.iconSize,
@@ -115,14 +92,24 @@ function IconRuntime.Create(options)
     getIconDesaturated = function()
       return settings.iconDesaturated ~= false
     end,
-    getIconBackground = looks.getIconBackground,
-    getIconBorder = looks.getIconBorder,
-    getIconBorderThemed = looks.getIconBorderThemed,
-    getWidgetShape = looks.getWidgetShape,
+    getIconBackground = function()
+      return settings.iconBackground ~= false
+    end,
+    getIconBorder = function()
+      return settings.iconBorder ~= false
+    end,
+    getIconBorderThemed = function()
+      return settings.iconBorderThemed ~= false
+    end,
+    getWidgetShape = function()
+      return settings.widgetShape == "square" and "square" or "circle"
+    end,
     getWidgetStrata = function()
       return (accountState.settings or {}).widgetStrata
     end,
-    getWidgetTransparency = looks.getWidgetTransparency,
+    getWidgetTransparency = function()
+      return settings.widgetTransparency or 0
+    end,
     getIsLocked = function()
       return settings.lockToggleIcon == true
     end,

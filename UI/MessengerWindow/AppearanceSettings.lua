@@ -36,7 +36,6 @@ local DEFAULTS = {
   compactLayout = false,
   screenEdge = "off",
   edgeGlow = true,
-  edgeHandle = true,
   windowAnimation = true,
   iconDock = true,
   openAtSavedSpot = true,
@@ -114,7 +113,7 @@ function AppearanceSettings.Create(factory, parent, config, options)
   local windowStyleToggles = SettingsControls.BuildToggleList(factory, frame, hudStyleSelector.row, windowStyleSpecs)
   SettingsControls.BindToggleSpecs(panel, windowStyleToggles, windowStyleSpecs, DEFAULTS)
 
-  -- Sits between Compact window and the glow and handle toggles.
+  -- Sits between Compact window and the Edge glow toggle.
   local screenEdgeSelector = panel:bind(
     sel(text("Screen edge"), Options.BuildScreenEdgeOptions(), DEFAULTS.screenEdge, config.screenEdge or DEFAULTS.screenEdge, function(v)
       onChange("screenEdge", v)

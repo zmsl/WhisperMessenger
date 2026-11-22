@@ -48,9 +48,6 @@ local Layout = {
   SCREEN_EDGE_SHADE_WIDTH = 14,
   SCREEN_EDGE_GLOW_DEPTH = 48,
   SCREEN_EDGE_GLOW_CYCLE_SECONDS = 3,
-  -- The edge handle's art is drawn at this size (scripts/compose_gold_ring.py HANDLE_*).
-  SCREEN_EDGE_HANDLE_WIDTH = 22,
-  SCREEN_EDGE_HANDLE_HEIGHT = 104,
   -- Docked Native HUD title row: buttons centred in it, then a gap and the
   -- inset bevel divider (its atlas is 3 px tall); the content starts below.
   SCREEN_EDGE_TITLE_ROW_HEIGHT = 26,

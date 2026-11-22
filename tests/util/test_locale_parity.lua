@@ -54,6 +54,8 @@ local BORDER_KEYS = {
   "Shows the circle or square behind the widget icon. Turn it off to show only the two chat bubbles.",
 }
 local REMOVED_KEYS = {
+  "Edge handle",
+  "While the window is closed, a small tab on the screen edge shows your unread count. Click it to open the window. Only while Screen edge is on.",
   "Square button background",
   "Shows a square behind the widget icon when the widget shape is square. Turn it off to show only the two chat bubbles.",
   "Only with the square widget shape.",
@@ -119,8 +121,6 @@ local SCREEN_EDGE_KEYS = {
   "The compact window stays where you move it.",
   "Edge glow",
   "While the window is closed, the screen edge glows softly when you have unread whispers. Only while Screen edge is on.",
-  "Edge handle",
-  "While the window is closed, a small tab on the screen edge shows your unread count. Click it to open the window. Only while Screen edge is on.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 local SEPARATE_KEY = "Separate %s"

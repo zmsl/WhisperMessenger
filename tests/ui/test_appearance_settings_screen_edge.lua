@@ -66,42 +66,37 @@ return function()
     local selector = FindUI.byLabel(result.frame, "Screen edge")
     local glow = FindUI.byLabel(result.frame, "Edge glow")
     assert(select(2, glow:GetPoint()) == selector, "anchored under the selector")
-    assert(select(2, FindUI.byLabel(result.frame, "Edge handle"):GetPoint()) == glow, "handle under glow")
   end
 
-  -- test_edge_glow_and_handle_start_on
+  -- test_edge_glow_starts_on_and_there_is_no_handle_toggle
   do
     local result = create()
     assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Edge glow")), "glow on")
-    assert(FindUI.isToggleOn(FindUI.toggle(result.frame, "Edge handle")), "handle on")
+    assert(FindUI.text(result.frame, "Edge handle") == nil, "no Edge handle toggle")
   end
 
   -- test_a_saved_off_shows_off
   do
-    local result = create({ edgeGlow = false, edgeHandle = false })
+    local result = create({ edgeGlow = false })
     assert(not FindUI.isToggleOn(FindUI.toggle(result.frame, "Edge glow")), "glow off")
-    assert(not FindUI.isToggleOn(FindUI.toggle(result.frame, "Edge handle")), "handle off")
   end
 
   -- test_clicking_saves_false
   do
     local result, changes = create()
-    for _, key in ipairs({ "edgeGlow", "edgeHandle" }) do
-      local label = key == "edgeGlow" and "Edge glow" or "Edge handle"
-      local toggle = FindUI.toggle(result.frame, label)
-      toggle.scripts.OnClick(toggle)
-      assert(lastChange(changes, key).value == false, key .. " asks for off")
-    end
+    local toggle = FindUI.toggle(result.frame, "Edge glow")
+    toggle.scripts.OnClick(toggle)
+    assert(lastChange(changes, "edgeGlow").value == false, "edgeGlow asks for off")
   end
 
-  -- test_reset_sends_off_and_both_switches_on
+  -- test_reset_sends_off_and_the_glow_on
   do
-    local result, changes = create({ screenEdge = "left", edgeGlow = false, edgeHandle = false })
+    local result, changes = create({ screenEdge = "left", edgeGlow = false })
     local reset = FindUI.byLabel(result.frame, "Reset to Defaults")
     reset.scripts.OnClick(reset)
     assert(lastChange(changes, "screenEdge").value == "off", "edge off")
     assert(lastChange(changes, "edgeGlow").value == true, "glow on")
-    assert(lastChange(changes, "edgeHandle").value == true, "handle on")
+    assert(lastChange(changes, "edgeHandle") == nil, "no handle setting to reset")
   end
 
   -- test_labels_survive_a_language_refresh
@@ -109,6 +104,6 @@ return function()
     local result = create()
     result.setLanguage()
     assert(FindUI.byLabel(result.frame, "Screen edge") ~= nil, "selector relabelled")
-    assert(FindUI.byLabel(result.frame, "Edge glow") ~= nil and FindUI.byLabel(result.frame, "Edge handle") ~= nil, "toggles relabelled")
+    assert(FindUI.byLabel(result.frame, "Edge glow") ~= nil, "toggle relabelled")
   end
 end

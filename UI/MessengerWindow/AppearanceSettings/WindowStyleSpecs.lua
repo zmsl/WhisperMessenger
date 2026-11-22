@@ -35,22 +35,6 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  local edgeHandleSpec = {
-    key = "edgeHandle",
-    label = text("Edge handle"),
-    labelKey = "Edge handle",
-    initial = config.edgeHandle ~= false,
-    onChange = function(value)
-      onChange("edgeHandle", value)
-    end,
-    tooltipLines = {
-      text("Edge handle"),
-      text(
-        "While the window is closed, a small tab on the screen edge shows your unread count. Click it to open the window. Only while Screen edge is on."
-      ),
-    },
-  }
-
   local windowAnimationSpec = {
     key = "windowAnimation",
     label = text("Window animation"),
@@ -111,7 +95,7 @@ function WindowStyleSpecs.Build(config, onChange, text, gap)
     },
   }
 
-  return { compactLayoutSpec, edgeGlowSpec, edgeHandleSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
+  return { compactLayoutSpec, edgeGlowSpec, windowAnimationSpec, iconDockSpec, openAtSavedSpotSpec, showEmojiButtonSpec }
 end
 
 ns.AppearanceSettingsWindowStyleSpecs = WindowStyleSpecs

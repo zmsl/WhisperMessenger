@@ -59,12 +59,12 @@ return function()
     assert(saved ~= nil and saved.value == true, "the default is on")
   end
 
-  -- test_the_animation_row_sits_below_the_edge_handle_toggle
+  -- test_the_animation_row_sits_below_the_edge_glow_toggle
   do
     local result = create()
-    local edgeHandle = FindUI.byLabel(result.frame, "Edge handle")
+    local edgeGlow = FindUI.byLabel(result.frame, "Edge glow")
     local animation = FindUI.byLabel(result.frame, LABEL)
-    assert(select(2, animation:GetPoint()) == edgeHandle, "anchored under the Edge handle toggle")
+    assert(select(2, animation:GetPoint()) == edgeGlow, "anchored under the Edge glow toggle")
   end
 
   -- test_the_animation_label_survives_a_language_refresh

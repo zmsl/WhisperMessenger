@@ -57,7 +57,6 @@ function SettingsPanels.Create(factory, options)
         compactLayout = settingsConfig.compactLayout,
         screenEdge = settingsConfig.screenEdge,
         edgeGlow = settingsConfig.edgeGlow,
-        edgeHandle = settingsConfig.edgeHandle,
         windowAnimation = settingsConfig.windowAnimation,
         iconDock = settingsConfig.iconDock,
         openAtSavedSpot = settingsConfig.openAtSavedSpot,

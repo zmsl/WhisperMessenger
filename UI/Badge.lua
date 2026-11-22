@@ -16,15 +16,6 @@ local OUTLINE_PAD = 2 -- px of dark rim around the badge
 local OUTLINE_COLOR = { 0, 0, 0, 0.75 }
 local OVERFLOW = 99
 
--- The text a badge shows for count: "" at 0, capped at "99+".
-function Badge.Text(count)
-  local n = tonumber(count) or 0
-  if n <= 0 then
-    return ""
-  end
-  return n > OVERFLOW and (OVERFLOW .. "+") or tostring(n)
-end
-
 -- opts.size    : px, default Theme.LAYOUT.ICON_BADGE_SIZE (SetSize, not
 --                SetScale, so small badges keep readable digits)
 -- opts.outline : dark rim for badges drawn over busy art
@@ -80,9 +71,14 @@ function Badge.Create(factory, parent, opts)
   end
 
   local function setCount(count)
-    local text = Badge.Text(count)
-    label:SetText(text)
-    frame:SetShown(text ~= "")
+    local n = tonumber(count) or 0
+    if n <= 0 then
+      label:SetText("")
+      frame:Hide()
+      return
+    end
+    label:SetText(n > OVERFLOW and (OVERFLOW .. "+") or tostring(n))
+    frame:Show()
   end
 
   paint()

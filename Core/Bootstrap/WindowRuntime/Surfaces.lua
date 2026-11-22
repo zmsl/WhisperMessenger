@@ -199,15 +199,11 @@ function Surfaces.Create(options)
     end
     edgeSurface = ScreenEdgeSurface.Create(options.uiFactory, options.uiParent, {
       settings = settings,
-      looks = IconRuntime.LookGetters(settings),
       getSide = function()
         return EdgeWiring.Side(settings)
       end,
       isWindowShown = function()
         return runtime.window ~= nil and runtime.window.frame:IsShown()
-      end,
-      onClick = function()
-        handlers.onToggle()
       end,
     })
     edgeSurface.setUnreadCount(IconSurfaces.Counts(options.buildContacts(), runtime.panelRegistry))

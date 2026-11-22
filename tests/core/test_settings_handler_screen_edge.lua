@@ -21,8 +21,8 @@ return function()
     assert(#case.seen == 1 and case.seen[1].key == "screenEdge" and case.seen[1].value == "left", "reported")
   end
 
-  -- test_glow_and_handle_are_saved_and_reported
-  for _, key in ipairs({ "edgeGlow", "edgeHandle" }) do
+  -- test_glow_is_saved_and_reported
+  for _, key in ipairs({ "edgeGlow" }) do
     local case = build()
     case.onChange(key, false)
     assert(case.settings[key] == false, key .. " saved")
