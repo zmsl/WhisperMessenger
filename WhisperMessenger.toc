@@ -213,6 +213,7 @@ UI/Helpers.lua
 UI/LevelColor.lua
 UI/Badge.lua
 UI/Shared/PickerStyles.lua
+UI/Shared/PopupEscape.lua
 UI/Shared/PickerPopup.lua
 UI/Shared/KeybindHints.lua
 UI/Shared/UnreadSummary.lua
@@ -343,6 +344,7 @@ UI/Composer/ComposerInputBox.lua
 UI/Composer/ComposerSubmit.lua
 UI/Composer/ComposerHistory.lua
 UI/Composer/ComposerRelayout.lua
+UI/Composer/ComposerPadHint.lua
 UI/Composer/Composer.lua
 UI/ToggleIcon/BadgeFilter.lua
 UI/ToggleIcon/PreviewMetrics.lua
@@ -415,6 +417,12 @@ UI/MessengerWindow/WindowScripts/Frame/ContactsResize.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeKey.lua
 UI/MessengerWindow/WindowScripts/Frame/EscapeOrder.lua
 UI/MessengerWindow/WindowScripts/Frame/WindowStrata.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadCloseOrder.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadMarks.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadPopups.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadDeps.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadRightClick.lua
+UI/MessengerWindow/WindowScripts/Frame/GamepadNav.lua
 UI/MessengerWindow/WindowScripts/Frame/ScriptBindings.lua
 UI/MessengerWindow/WindowScripts/Frame.lua
 UI/MessengerWindow/AppearanceSettings/SelectorSkin.lua
@@ -429,6 +437,7 @@ UI/Shared/SettingsControls/Banner.lua
 UI/Shared/SettingsControls/Header.lua
 UI/Shared/SettingsControls/SectionLabel.lua
 UI/Shared/SettingsControls/SliderSkin.lua
+UI/Shared/SettingsControls/SliderPadStep.lua
 UI/Shared/SettingsControls.lua
 UI/Shared/DialogChrome.lua
 UI/Shared/TwoFieldDialog.lua
@@ -482,6 +491,7 @@ UI/MessengerWindow/MessengerWindow/PanelWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowAlpha.lua
 UI/MessengerWindow/MessengerWindow/RelayoutController.lua
 UI/MessengerWindow/MessengerWindow/LifecycleWiring.lua
+UI/MessengerWindow/MessengerWindow/LifecycleSetup.lua
 UI/MessengerWindow/MessengerWindow/PatchNotesRuntime.lua
 UI/MessengerWindow/MessengerWindow/TabSelectionMemory.lua
 UI/MessengerWindow/MessengerWindow/LanguageRefresh.lua
@@ -501,6 +511,10 @@ UI/MessengerWindow/MessengerWindow/EdgeWiring.lua
 UI/MessengerWindow/MessengerWindow/WindowShell.lua
 UI/MessengerWindow/MessengerWindow/ComposerRuntime.lua
 UI/MessengerWindow/MessengerWindow/SavedStateApply.lua
+UI/MessengerWindow/MessengerWindow/GamepadSettings.lua
+UI/MessengerWindow/MessengerWindow/GamepadTranscript.lua
+UI/MessengerWindow/MessengerWindow/GamepadComposer.lua
+UI/MessengerWindow/MessengerWindow/GamepadWiring.lua
 UI/MessengerWindow/MessengerWindow.lua
 
 Core/Bootstrap/WindowRuntime/PanelRegistry.lua
