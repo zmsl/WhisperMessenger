@@ -130,6 +130,18 @@ function Options.BuildThemePresetOptions()
   end, Localization.Text)
 end
 
+local GLOW_CUSTOM_SPEC = { key = "custom", label = "Custom", tooltip = "Pick your own glow color." }
+
+-- The theme presets (each meaning that preset's accent), then Custom.
+function Options.BuildGlowColorOptions()
+  local options = Options.BuildThemePresetOptions()
+  for _, opt in ipairs(options) do
+    opt.tooltip = Localization.Text("Glows in this theme's accent color.")
+  end
+  options[#options + 1] = localizeOptionSpecs({ GLOW_CUSTOM_SPEC })[1]
+  return options
+end
+
 function Options.BuildBubbleColorOptions()
   local keys = Theme.ListBubblePresets and Theme.ListBubblePresets() or { "default" }
   return SettingsControls.ProjectLabeledOptions(keys, BUBBLE_COLOR_LABELS, function(key)

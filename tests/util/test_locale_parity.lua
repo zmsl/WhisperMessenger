@@ -121,6 +121,10 @@ local SCREEN_EDGE_KEYS = {
   "The compact window stays where you move it.",
   "Edge glow",
   "While the window is closed, the screen edge glows softly when you have unread whispers. Only while Screen edge is on.",
+  "Glow color",
+  "Custom",
+  "Glows in this theme's accent color.",
+  "Pick your own glow color.",
 }
 local LANGUAGE_RELOAD_KEY = "Reload the interface now to apply the language change?"
 local SEPARATE_KEY = "Separate %s"

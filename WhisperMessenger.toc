@@ -437,6 +437,8 @@ UI/MessengerWindow/GeneralSettings/TimeSection.lua
 UI/ContactsList/ExportPanel.lua
 UI/MessengerWindow/GeneralSettings.lua
 UI/MessengerWindow/AppearanceSettings/Options.lua
+UI/MessengerWindow/AppearanceSettings/ColorPicker.lua
+UI/MessengerWindow/AppearanceSettings/ScreenEdgeRows.lua
 UI/MessengerWindow/AppearanceSettings/WindowStyleSpecs.lua
 UI/MessengerWindow/AppearanceSettings.lua
 UI/MessengerWindow/QuickRepliesSettings.lua

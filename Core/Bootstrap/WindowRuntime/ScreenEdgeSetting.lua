@@ -7,7 +7,7 @@ end
 -- ensureSurface(), updateIconSurfaces(), readCompactSlot().
 local ScreenEdgeSetting = {}
 
-local KEYS = { screenEdge = true, edgeGlow = true }
+local KEYS = { screenEdge = true, edgeGlow = true, edgeGlowColor = true, edgeGlowCustom = true }
 
 function ScreenEdgeSetting.Apply(ctx, key, _value)
   if not KEYS[key] then

@@ -6,7 +6,7 @@ All releases: **2.1.x (current)** · [2.0.x](archive/changelog/2.0.md) · [1.4.x
 
 ## [Unreleased]
 
-- New Appearance option "Screen edge": with Compact window on, the window sits against the left or right edge of your screen at full height and slides in and out of it. While it is closed, the edge glows softly for unread whispers; the glow can be turned off.
+- New Appearance option "Screen edge": with Compact window on, the window sits against the left or right edge of your screen at full height and slides in and out of it. While it is closed, the edge glows softly for unread whispers. Pick the glow's color under "Glow color": any theme's accent or your own color; by default it follows your theme. The glow can be turned off.
 
 ## [2.1.9] - 2026-11-21
 

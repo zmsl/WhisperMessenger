@@ -36,7 +36,7 @@ return function()
   end
 
   -- test_each_key_builds_and_refreshes_the_surface
-  for _, key in ipairs({ "screenEdge", "edgeGlow" }) do
+  for _, key in ipairs({ "screenEdge", "edgeGlow", "edgeGlowColor", "edgeGlowCustom" }) do
     local case = build(true)
     ScreenEdgeSetting.Apply(case.ctx, key, key == "screenEdge" and "right" or false)
     assert(case.ensured == 1 and case.updated == 1, key .. " builds and refreshes the surface")

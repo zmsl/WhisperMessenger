@@ -4,6 +4,8 @@ if type(ns) ~= "table" then
 end
 
 local Theme = ns.Theme or require("WhisperMessenger.UI.Theme")
+local Presets = ns.ThemePresets or require("WhisperMessenger.UI.Theme.Presets")
+local UIHelpers = ns.UIHelpers or require("WhisperMessenger.UI.Helpers")
 local PulseGlow = ns.ToggleIconPulseGlow or require("WhisperMessenger.UI.ToggleIcon.PulseGlow")
 
 -- A soft pulsing strip along the full height of a screen edge, for unread
@@ -13,10 +15,23 @@ local ScreenEdgeGlow = {}
 
 ScreenEdgeGlow.TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\edge-glow.png"
 
--- options: theme.
+-- settings.edgeGlowColor: "custom" (edgeGlowCustom = { r, g, b }), a theme
+-- preset key (that preset's accent), or nil / unknown: the active accent.
+function ScreenEdgeGlow.ResolveColor(settings, activeTheme)
+  local choice = settings.edgeGlowColor
+  local custom = settings.edgeGlowCustom
+  if choice == "custom" and type(custom) == "table" then
+    return { custom.r, custom.g, custom.b, 1 }
+  end
+  local preset = choice ~= nil and choice ~= "custom" and Presets.Get(choice)
+  return preset and preset.accent or activeTheme.COLORS.accent
+end
+
+-- options: theme, settings (edgeGlowColor, edgeGlowCustom).
 function ScreenEdgeGlow.Create(factory, parent, options)
   options = options or {}
   local theme = options.theme or Theme
+  local settings = options.settings or {}
   local frame = factory.CreateFrame("Frame", nil, parent)
   frame:SetFrameStrata("BACKGROUND")
   frame:EnableMouse(false)
@@ -44,6 +59,14 @@ function ScreenEdgeGlow.Create(factory, parent, options)
     end
   end
 
+  -- Repainted on every refresh, so a colour setting applies at once.
+  local lastTheme = theme
+  local function paint(activeTheme)
+    lastTheme = activeTheme or lastTheme
+    UIHelpers.applyVertexColor(pulse.glowTexture, ScreenEdgeGlow.ResolveColor(settings, lastTheme))
+  end
+  paint()
+
   local function setLit(on)
     if on then
       frame:Show()
@@ -59,7 +82,8 @@ function ScreenEdgeGlow.Create(factory, parent, options)
     pulse = pulse,
     setSide = setSide,
     setLit = setLit,
-    refreshTheme = pulse.applyTheme,
+    paint = paint,
+    refreshTheme = paint,
   }
 end
 

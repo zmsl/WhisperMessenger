@@ -12,7 +12,7 @@ local ScreenEdgeSurface = {}
 -- options: theme, settings, getSide(), isWindowShown().
 function ScreenEdgeSurface.Create(factory, parent, options)
   local settings = options.settings
-  local glow = ScreenEdgeGlow.Create(factory, parent, { theme = options.theme })
+  local glow = ScreenEdgeGlow.Create(factory, parent, { theme = options.theme, settings = settings })
   local surface = { glow = glow }
   surface.total, surface.whispers = 0, 0
 
@@ -20,6 +20,7 @@ function ScreenEdgeSurface.Create(factory, parent, options)
     local side = options.getSide()
     local closed = side ~= nil and not options.isWindowShown()
     glow.setSide(side)
+    glow.paint()
     glow.setLit(closed and settings.edgeGlow ~= false and surface.whispers > 0)
   end
 
