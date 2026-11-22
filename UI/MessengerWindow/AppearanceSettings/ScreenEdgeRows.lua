@@ -22,15 +22,19 @@ local SWATCH_INSET = 6
 
 local function createGlowColor(sel, panel, config, onChange)
   local saved = { edgeGlowColor = config.edgeGlowColor, edgeGlowCustom = config.edgeGlowCustom }
-  local selector, swatch
+  local selector, swatch, before
 
   local function shownKey()
-    return saved.edgeGlowColor or Theme.GetPreset()
+    local key = saved.edgeGlowColor
+    if key == CUSTOM and not ScreenEdgeGlow.CustomColor(saved.edgeGlowCustom) then
+      key = nil -- a broken saved colour glows in the active preset's accent
+    end
+    return key or Theme.GetPreset()
   end
 
   local function paintSwatch()
-    local c = saved.edgeGlowCustom
-    if type(c) == "table" then
+    local c = ScreenEdgeGlow.CustomColor(saved.edgeGlowCustom)
+    if c then
       swatch:SetColorTexture(c[1], c[2], c[3], 1)
       swatch:Show()
     else
@@ -47,12 +51,17 @@ local function createGlowColor(sel, panel, config, onChange)
   end
 
   local function openPicker()
-    local before = { edgeGlowColor = saved.edgeGlowColor, edgeGlowCustom = saved.edgeGlowCustom }
+    -- Custom clicked again while the picker is open keeps the choice from before it first opened.
+    if not (before and ColorPicker.IsOpen()) then
+      before = { edgeGlowColor = saved.edgeGlowColor, edgeGlowCustom = saved.edgeGlowCustom }
+    end
     local c = ScreenEdgeGlow.ResolveColor(saved, Theme)
     local opened = ColorPicker.Open(c[1], c[2], c[3], function(r, g, b)
       set(CUSTOM, { r, g, b })
     end, function()
-      set(before.edgeGlowColor, before.edgeGlowCustom)
+      local restore = before
+      before = nil
+      set(restore.edgeGlowColor, restore.edgeGlowCustom)
     end)
     if not opened then
       selector.setSelected(shownKey())

@@ -50,6 +50,10 @@ local function withPicker(fn)
   end
   function frame:SetupColorPickerAndShow(info)
     self.info = info
+    self.shown = true
+  end
+  function frame:IsShown()
+    return self.shown == true
   end
   local saved = rawget(_G, "ColorPickerFrame")
   rawset(_G, "ColorPickerFrame", frame)
@@ -123,6 +127,49 @@ return function()
     assert(lastChange(changes, "edgeGlowColor").value == "jade_dark", "previous preset back")
     assert(lastChange(changes, "edgeGlowCustom").value == nil, "no custom colour, as before")
     assert(selectedKey(result) == "jade_dark", "selection back")
+  end)
+
+  -- test_custom_again_while_open_still_cancels_to_the_choice_before_the_picker
+  withPicker(function(picker)
+    local result, changes = create({ edgeGlowColor = "jade_dark" })
+    local custom = customButton(result)
+    custom.scripts.OnClick(custom)
+    picker.rgb = { 0.9, 0.1, 0.1 }
+    picker.info.swatchFunc()
+    custom.scripts.OnClick(custom)
+    picker.rgb = { 0.1, 0.9, 0.1 }
+    picker.info.swatchFunc()
+    picker.shown = false
+    picker.info.cancelFunc({ r = 0, g = 0, b = 0 })
+    assert(lastChange(changes, "edgeGlowColor").value == "jade_dark", "the pre-picker preset back")
+    assert(lastChange(changes, "edgeGlowCustom").value == nil, "no custom colour, as before the picker")
+  end)
+
+  -- test_after_okay_a_new_picker_cancels_to_the_okayed_colour
+  withPicker(function(picker)
+    local result, changes = create({ edgeGlowColor = "jade_dark" })
+    local custom = customButton(result)
+    custom.scripts.OnClick(custom)
+    picker.rgb = { 0.9, 0.1, 0.1 }
+    picker.info.swatchFunc()
+    picker.shown = false -- Okay closes it
+    custom.scripts.OnClick(custom)
+    picker.rgb = { 0.1, 0.9, 0.1 }
+    picker.info.swatchFunc()
+    picker.shown = false
+    picker.info.cancelFunc({ r = 0, g = 0, b = 0 })
+    assert(lastChange(changes, "edgeGlowColor").value == "custom", "the okayed custom stays")
+    assert(lastChange(changes, "edgeGlowCustom").value[1] == 0.9, "the okayed colour back")
+  end)
+
+  -- test_an_invalid_saved_custom_colour_follows_the_active_preset
+  withPicker(function(picker)
+    local result = create({ edgeGlowColor = "custom", edgeGlowCustom = { "red", 1, 1 } })
+    local custom = customButton(result)
+    assert(custom.swatch.shown == false, "no swatch for a broken colour")
+    assert(selectedKey(result) == Theme.GetPreset(), "the active preset shows")
+    custom.scripts.OnClick(custom)
+    assert(picker.info.r == Theme.COLORS.accent[1], "picker starts at the active accent")
   end)
 
   -- test_a_swatch_call_during_setup_still_cancels_back_to_nothing_saved

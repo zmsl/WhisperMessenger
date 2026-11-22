@@ -33,5 +33,10 @@ function ColorPicker.Open(r, g, b, onColor, onCancel)
   return true
 end
 
+function ColorPicker.IsOpen()
+  local frame = _G.ColorPickerFrame
+  return frame and frame:IsShown() == true or false
+end
+
 ns.AppearanceSettingsColorPicker = ColorPicker
 return ColorPicker

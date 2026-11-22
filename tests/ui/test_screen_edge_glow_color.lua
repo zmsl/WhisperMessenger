@@ -60,6 +60,14 @@ return function()
     assertRgb(build({ edgeGlowColor = "gone_preset" }), Theme.COLORS.accent, "unknown preset")
   end
 
+  -- test_a_saved_custom_colour_is_validated_and_clamped
+  do
+    assertRgb(build({ edgeGlowColor = "custom", edgeGlowCustom = { 2, -1, 0.5 } }), { 1, 0, 0.5 }, "clamped to 0-1")
+    assertRgb(build({ edgeGlowColor = "custom", edgeGlowCustom = { "x", 1, 1 } }), Theme.COLORS.accent, "non-number entry")
+    assertRgb(build({ edgeGlowColor = "custom", edgeGlowCustom = { 1, 1 } }), Theme.COLORS.accent, "missing blue")
+    assertRgb(build({ edgeGlowColor = "custom", edgeGlowCustom = "red" }), Theme.COLORS.accent, "not a table")
+  end
+
   -- test_a_theme_change_recolours_an_unset_glow_but_not_a_chosen_one
   do
     local other = { COLORS = { accent = { 0.1, 0.2, 0.3, 1 } } }
