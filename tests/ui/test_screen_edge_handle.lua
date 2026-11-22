@@ -1,10 +1,12 @@
--- The edge handle: a half disc on the screen edge (flat side on the edge) that
--- opens the closed window, rimmed like the window and badged with the unread
--- whisper count.
-local ScreenEdgeHandle = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeHandle")
+-- The edge handle: a 22 x 104 tab on the screen edge (flat side on the edge)
+-- that opens the closed window. It wears the floating button's Icons settings
+-- (shape, border, background, themed border, transparency) through the same
+-- getters, and shows the unread whisper count as stacked digits.
 local AnimatedFactory = require("tests.helpers.animated_factory")
-local Hud = require("WhisperMessenger.UI.Theme.Hud")
 local ScreenEdgeSurface = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeSurface")
+local ScreenEdgeHandle = require("WhisperMessenger.UI.ToggleIcon.ScreenEdgeHandle")
+local SquareLook = require("WhisperMessenger.UI.ToggleIcon.SquareLook")
+local IconRuntime = require("WhisperMessenger.Core.Bootstrap.WindowRuntime.IconRuntime")
 local Theme = require("WhisperMessenger.UI.Theme")
 local FindUI = require("tests.helpers.find_ui")
 
@@ -17,6 +19,7 @@ local function build(settings)
   local surface = ScreenEdgeSurface.Create(factory, parent, {
     theme = Theme,
     settings = settings,
+    looks = IconRuntime.LookGetters(settings),
     getSide = function()
       return state.side
     end,
@@ -30,164 +33,159 @@ local function build(settings)
   return surface, state, settings, parent
 end
 
-return function()
-  local function test_handle_shows_while_the_window_is_hidden()
-    local surface = build()
-    assert(surface.handle.frame:IsShown(), "a hidden window shows the handle")
-  end
+local function sameColor(got, want)
+  return got ~= nil and got[1] == want[1] and got[2] == want[2] and got[3] == want[3]
+end
 
-  local function test_handle_hides_while_the_window_shows()
-    local surface, state = build()
+return function()
+  -- test_handle_shows_only_while_the_window_is_hidden_and_the_setting_is_on
+  do
+    local surface, state, settings = build()
+    assert(surface.handle.frame:IsShown(), "a hidden window shows the handle")
     state.shown = true
     surface.refresh()
     assert(not surface.handle.frame:IsShown(), "a shown window hides the handle")
-  end
-
-  local function test_edge_handle_off_hides_it()
-    local surface, _, settings = build()
+    state.shown = false
     settings.edgeHandle = false
     surface.refresh()
     assert(not surface.handle.frame:IsShown(), "edgeHandle = false hides the handle")
-  end
-
-  local function test_no_side_no_handle()
-    local surface, state = build()
+    settings.edgeHandle = nil
     state.side = nil
     surface.refresh()
     assert(not surface.handle.frame:IsShown(), "no side, no handle")
   end
 
-  local function test_handle_sits_centred_on_the_left_edge()
-    local surface, _, _, parent = build()
+  -- test_handle_is_22_by_104_on_the_screen_edge
+  do
+    local surface, state, _, parent = build()
     local frame = surface.handle.frame
     local p = frame.point
     assert(p[1] == "LEFT" and p[2] == parent and p[3] == "LEFT", "anchored LEFT to the parent's LEFT")
-    assert(frame.width == 26 and frame.height == 52, "26 x 52 (radius x diameter), got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
-    assert(frame.frameStrata == "MEDIUM", "medium strata")
-    assert(frame.mouseEnabled == true, "the handle takes the mouse")
-  end
-
-  local function test_right_handle_sits_on_the_right_edge()
-    local surface, state, _, parent = build()
+    assert(frame.width == 22 and frame.height == 104, "22 x 104, got " .. tostring(frame.width) .. " x " .. tostring(frame.height))
+    assert(frame.frameStrata == "MEDIUM" and frame.mouseEnabled == true, "medium strata, takes the mouse")
     state.side = "right"
     surface.refresh()
-    local p = surface.handle.frame.point
+    p = frame.point
     assert(p[1] == "RIGHT" and p[2] == parent and p[3] == "RIGHT", "anchored RIGHT to the parent's RIGHT")
   end
 
-  local function test_badge_shows_unread_whispers_and_hides_at_zero()
+  -- test_circle_shape_wears_the_capsule_rim_over_its_mask
+  do
     local surface = build()
-    local badge = surface.handle.badge
-    assert(badge.outline ~= nil, "the shared badge, outlined")
-    surface.setUnreadCount(4, 3)
-    assert(badge.label:GetText() == "3", "badge shows whispers, got " .. tostring(badge.label:GetText()))
-    assert(badge.frame:IsShown(), "badge shown")
-    surface.setUnreadCount(200, 150)
-    assert(badge.label:GetText() == "99+", "three digits cap at 99+, got " .. tostring(badge.label:GetText()))
-    surface.setUnreadCount(2, 0)
-    assert(not badge.frame:IsShown(), "badge hidden at zero whispers")
+    local handle = surface.handle
+    assert(handle.rim.texturePath == ScreenEdgeHandle.CAPSULE_TEXTURE, "capsule rim, got " .. tostring(handle.rim.texturePath))
+    assert(ScreenEdgeHandle.CAPSULE_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\handle_capsule_gold.png", "rim path")
+    assert(handle.fill.texturePath == ScreenEdgeHandle.CAPSULE_MASK_TEXTURE, "capsule fill")
+    assert(ScreenEdgeHandle.CAPSULE_MASK_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\handle_capsule_mask.png", "mask path")
+    assert(sameColor(handle.fill.vertexColor, Theme.COLORS.toggle_icon_bg), "the button's background colour")
+    assert(handle.rim:IsShown() and handle.fill:IsShown(), "border and background on by default")
   end
 
-  local function test_badge_sits_on_the_upper_inner_curve()
+  -- test_square_shape_wears_the_tab_rim_the_button_would_use
+  do
+    local surface = build({ widgetShape = "square" })
+    local handle = surface.handle
+    local want = handle.frame.CreateMaskTexture and ScreenEdgeHandle.TAB_ROUNDED_TEXTURE or ScreenEdgeHandle.TAB_TEXTURE
+    assert(handle.rim.texturePath == want, "tab rim, got " .. tostring(handle.rim.texturePath))
+    assert(ScreenEdgeHandle.TAB_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\handle_tab_gold.png", "tab path")
+    assert(ScreenEdgeHandle.TAB_ROUNDED_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\handle_tab_gold_rounded.png", "rounded tab path")
+    assert(handle.fill.texturePath == SquareLook.SQUARE_TEXTURE, "a plain square fill")
+    local p1, p2 = handle.fill.points[1], handle.fill.points[2]
+    assert(p1[1] == "TOPRIGHT" and p1[4] == -2 and p1[5] == -2, "left: inset 2 on the inner side and top")
+    assert(p2[1] == "BOTTOMLEFT" and p2[4] == 0 and p2[5] == 2, "left: flush on the screen side, inset 2 at the bottom")
+  end
+
+  -- test_border_and_background_settings_take_rim_and_fill_off
+  do
+    local surface = build({ iconBorder = false, iconBackground = false })
+    assert(not surface.handle.rim:IsShown(), "border off: no rim")
+    assert(not surface.handle.fill:IsShown(), "background off: no fill")
+  end
+
+  -- test_themed_border_tints_the_rim_like_the_button
+  do
+    local surface, _, settings = build()
+    local rim = surface.handle.rim
+    assert(rim.desaturated == true and sameColor(rim.vertexColor, Theme.COLORS.accent), "themed (default): desaturated, accent")
+    settings.iconBorderThemed = false
+    surface.refresh()
+    assert(rim.desaturated == false and sameColor(rim.vertexColor, { 1, 1, 1 }), "gold: own colours")
+  end
+
+  -- test_a_setting_change_repaints_on_the_next_refresh
+  do
+    local surface, _, settings = build()
+    settings.widgetShape = "square"
+    settings.iconBorder = false
+    surface.refresh()
+    assert(surface.handle.fill.texturePath == SquareLook.SQUARE_TEXTURE, "square now")
+    assert(not surface.handle.rim:IsShown(), "rim off now")
+  end
+
+  -- test_transparency_fades_unless_hovered_or_unread
+  do
+    local surface, _, settings = build({ widgetTransparency = 0.6 })
+    local frame = surface.handle.frame
+    assert(math.abs(frame.alpha - 0.4) < 1e-9, "faded to the chosen transparency, got " .. tostring(frame.alpha))
+    surface.setUnreadCount(3, 2)
+    assert(frame.alpha == 1, "unread whispers: opaque")
+    surface.setUnreadCount(0, 0)
+    assert(math.abs(frame.alpha - 0.4) < 1e-9, "read: faded again")
+    frame.scripts.OnEnter(frame)
+    assert(frame.alpha == 1, "hovered: opaque")
+    frame.scripts.OnLeave(frame)
+    settings.widgetTransparency = 0.2
+    surface.refresh()
+    assert(math.abs(frame.alpha - 0.8) < 1e-9, "a new transparency on the next refresh, got " .. tostring(frame.alpha))
+  end
+
+  -- test_count_is_stacked_vertical_text
+  do
+    local surface = build()
+    local label = surface.handle.label
+    assert(not label:IsShown(), "0: nothing shown")
+    for _, case in ipairs({ { 7, "7" }, { 12, "1\n2" }, { 150, "9\n9\n+" } }) do
+      surface.setUnreadCount(case[1] + 5, case[1])
+      assert(label:IsShown() and label:GetText() == case[2], case[1] .. ": got " .. tostring(label:GetText()))
+    end
+    surface.setUnreadCount(4, 0)
+    assert(not label:IsShown(), "back to 0: hidden")
+    local p = label.point
+    assert(p[1] == "CENTER" and p[2] == surface.handle.frame and p[3] == "CENTER", "centred")
+    assert(sameColor(label.textColor, Theme.COLORS.accent), "accent text")
+    assert(surface.handle.icon == nil and surface.handle.badge == nil, "no icon, no badge")
+  end
+
+  -- test_art_is_mirrored_on_the_right_edge
+  do
     local surface, state = build()
     local handle = surface.handle
-    local p = handle.badge.frame.point
-    -- 45 degrees up the curve: radius 26 * 0.7 = 18 px in and up from the edge's midpoint.
-    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "LEFT" and p[4] == 18 and p[5] == 18, "left edge: on the curve, inward")
+    local function coords(tex, want, label)
+      local c = tex.texCoords
+      assert(c[1] == want[1] and c[2] == want[2] and c[3] == 0 and c[4] == 1, label)
+    end
+    coords(handle.fill, { 0, 1 }, "left: fill as drawn")
+    coords(handle.rim, { 0, 1 }, "left: rim as drawn")
     state.side = "right"
     surface.refresh()
-    p = handle.badge.frame.point
-    assert(p[1] == "CENTER" and p[2] == handle.frame and p[3] == "RIGHT" and p[4] == -18 and p[5] == 18, "right edge: on the curve, inward")
+    coords(handle.fill, { 1, 0 }, "right: fill mirrored")
+    coords(handle.rim, { 1, 0 }, "right: rim mirrored")
   end
 
-  local function test_chat_icon_in_the_accent_colour()
+  -- test_no_blizzard_atlas
+  do
     local surface = build()
-    local icon = surface.handle.icon
-    assert(icon.texturePath == Theme.TEXTURES.nav_whispers_icon, "the chat bubble icon")
-    assert(icon.width == 16 and icon.height == 16, "16 px")
-    local p = icon.point
-    -- The half disc's centroid: 4r / 3pi = 11 px in from the flat edge.
-    assert(p[1] == "CENTER" and p[2] == surface.handle.frame and p[3] == "LEFT" and p[4] == 11 and p[5] == 0, "centred in the half disc")
-    assert(icon.vertexColor[1] == Theme.COLORS.accent[1] and icon.vertexColor[3] == Theme.COLORS.accent[3], "accent tint")
+    local found = FindUI.find(surface.handle.frame, function(node)
+      return node.atlas ~= nil
+    end)
+    assert(found == nil, "no atlas on the handle")
   end
 
-  local function test_no_blizzard_atlas()
-    for _, style in ipairs({ "off", "classic", "retail" }) do
-      Hud.Configure(style)
-      local surface = build()
-      local found = FindUI.find(surface.handle.frame, function(node)
-        return node.atlas ~= nil
-      end)
-      assert(found == nil, style .. ": no atlas on the handle")
-    end
-    Hud.Configure("off")
-  end
-
-  local function test_click_runs_the_toggle()
+  -- test_click_runs_the_toggle
+  do
     local surface, state = build()
     local frame = surface.handle.frame
     frame.scripts.OnClick(frame)
     assert(state.clicks == 1, "one click, one toggle")
   end
-
-  local function test_half_disc_fill_in_the_background_colour()
-    local surface = build()
-    local fill = surface.handle.fill
-    assert(fill.texturePath == ScreenEdgeHandle.FILL_TEXTURE, "the half-disc mask")
-    assert(ScreenEdgeHandle.FILL_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\half_disc_mask.png", "fill path")
-    assert(fill.vertexColor[1] == Theme.COLORS.bg_primary[1] and fill.vertexColor[3] == Theme.COLORS.bg_primary[3], "background tint")
-  end
-
-  local function test_hud_rim_is_the_gold_half_ring()
-    Hud.Configure("classic")
-    local surface = build()
-    local rim = surface.handle.rim
-    assert(rim.texturePath == ScreenEdgeHandle.RIM_TEXTURE, "the half ring")
-    assert(ScreenEdgeHandle.RIM_TEXTURE == "Interface\\AddOns\\WhisperMessenger\\Media\\half_ring_gold.png", "rim path")
-    assert(rim.desaturated == false and rim.vertexColor[1] == 1 and rim.vertexColor[3] == 1, "its own gold")
-    Hud.Configure("off")
-  end
-
-  local function test_custom_rim_is_the_half_ring_in_the_window_border_colour()
-    Hud.Configure("off")
-    local surface = build()
-    local rim = surface.handle.rim
-    assert(rim.texturePath == ScreenEdgeHandle.RIM_TEXTURE and rim.desaturated == true, "the half ring, desaturated")
-    assert(rim.vertexColor[1] == Theme.COLORS.window_border[1] and rim.vertexColor[3] == Theme.COLORS.window_border[3], "window border tint")
-  end
-
-  local function test_art_is_mirrored_on_the_right_edge()
-    local surface, state = build()
-    local handle = surface.handle
-    for _, tex in ipairs({ handle.fill, handle.rim }) do
-      local c = tex.texCoords
-      assert(c[1] == 0 and c[2] == 1 and c[3] == 0 and c[4] == 1, "left edge: art as drawn (flat side left)")
-    end
-    state.side = "right"
-    surface.refresh()
-    for _, tex in ipairs({ handle.fill, handle.rim }) do
-      local c = tex.texCoords
-      assert(c[1] == 1 and c[2] == 0 and c[3] == 0 and c[4] == 1, "right edge: mirrored")
-    end
-    local p = handle.icon.point
-    assert(p[3] == "RIGHT" and p[4] == -11, "right edge: icon 11 px in from the flat side")
-  end
-
-  Hud.Configure("off")
-  test_handle_shows_while_the_window_is_hidden()
-  test_handle_hides_while_the_window_shows()
-  test_edge_handle_off_hides_it()
-  test_no_side_no_handle()
-  test_handle_sits_centred_on_the_left_edge()
-  test_right_handle_sits_on_the_right_edge()
-  test_badge_shows_unread_whispers_and_hides_at_zero()
-  test_click_runs_the_toggle()
-  test_half_disc_fill_in_the_background_colour()
-  test_hud_rim_is_the_gold_half_ring()
-  test_custom_rim_is_the_half_ring_in_the_window_border_colour()
-  test_art_is_mirrored_on_the_right_edge()
-  test_badge_sits_on_the_upper_inner_curve()
-  test_chat_icon_in_the_accent_colour()
-  test_no_blizzard_atlas()
-  Hud.Configure("off")
 end

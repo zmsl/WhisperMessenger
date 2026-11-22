@@ -237,60 +237,76 @@ class RoundedSquareArtTests(unittest.TestCase):
         )
 
 
-class HalfRingArtTests(unittest.TestCase):
-    """The edge handle's art: the right half of the ring, flat side on x = 0, 128 x 256."""
 
-    def test_half_ring_is_the_right_half_of_the_ring(self):
-        for x, y in [(0, 5), (10, 30), (100, 128), (127, 200)]:
-            self.assertEqual(
-                compose_gold_ring.half_ring_pixel(x, y, 256),
-                compose_gold_ring.ring_pixel(x + 128, y, 256),
-            )
+class HandleArtTests(unittest.TestCase):
+    """The edge handle's art: 22 x 104 px in game, drawn on a 64 x 256 canvas, flat side on x = 0."""
 
-    def test_half_ring_band_meets_the_flat_edge_and_leaves_the_middle_clear(self):
-        self.assertEqual(compose_gold_ring.half_ring_pixel(0, 3, 256)[3], 1.0)
-        self.assertEqual(compose_gold_ring.half_ring_pixel(0, 128, 256)[3], 0.0)
+    G = compose_gold_ring
+    SX = G.HANDLE_WIDTH / G.HANDLE_CANVAS_W  # display px per texel, across
+    SY = G.HANDLE_HEIGHT / G.HANDLE_CANVAS_H  # and down
 
-    def test_half_disc_mask_fills_to_mid_band_with_a_smoothed_curve(self):
-        mask = compose_gold_ring.half_disc_pixel
-        self.assertEqual(mask(0, 128, 256)[3], 1.0)
-        self.assertEqual(mask(126, 128, 256)[3], 0.0)  # past mid-band, under the rim's outer half
-        edge = [mask(x, 128, 256)[3] for x in range(128)]
-        self.assertTrue(any(0 < a < 1 for a in edge), "anti-aliased curve")
+    def band_across(self, pixel, y):
+        """Display px of solid rim on texel row y."""
+        return sum(1 for x in range(self.G.HANDLE_CANVAS_W) if pixel(x, y)[3] > 0.5) * self.SX
 
-    def check_mode(self, mode, size):
+    def band_down(self, pixel, x):
+        """Display px of solid rim in the top half of texel column x."""
+        return sum(1 for y in range(self.G.HANDLE_CANVAS_H // 2) if pixel(x, y)[3] > 0.5) * self.SY
+
+    def test_capsule_rim_keeps_one_band_width_at_the_tip_and_the_ends(self):
+        tip = self.band_across(self.G.handle_capsule_pixel, self.G.HANDLE_CANVAS_H // 2)
+        end = self.band_down(self.G.handle_capsule_pixel, 0)
+        self.assertAlmostEqual(tip, self.G.HANDLE_CAPSULE_BAND, delta=0.5)
+        self.assertAlmostEqual(end, self.G.HANDLE_CAPSULE_BAND, delta=0.5)
+
+    def test_capsule_is_clear_inside_and_in_the_outer_corners(self):
+        self.assertEqual(self.G.handle_capsule_pixel(10, 128)[3], 0.0)
+        self.assertEqual(self.G.handle_capsule_pixel(63, 0)[3], 0.0)
+
+    def test_capsule_mask_fills_to_mid_band(self):
+        self.assertEqual(self.G.handle_capsule_mask_pixel(10, 128)[3], 1.0)
+        self.assertEqual(self.G.handle_capsule_mask_pixel(63, 128)[3], 0.0)
+        self.assertEqual(self.G.handle_capsule_mask_pixel(63, 0)[3], 0.0)
+
+    def test_tab_rim_keeps_the_square_band_on_both_sides(self):
+        side = self.band_across(self.G.handle_tab_pixel, self.G.HANDLE_CANVAS_H // 2)
+        top = self.band_down(self.G.handle_tab_pixel, 0)
+        self.assertAlmostEqual(side, self.G.HANDLE_TAB_BAND, delta=0.5)
+        self.assertAlmostEqual(top, self.G.HANDLE_TAB_BAND, delta=0.5)
+
+    def test_tab_has_a_sharp_inner_corner_and_the_rounded_tab_a_round_one(self):
+        self.assertGreater(self.G.handle_tab_pixel(63, 0)[3], 0.4)
+        self.assertEqual(self.G.handle_tab_rounded_pixel(63, 0)[3], 0.0)
+        for a, b in zip(self.G.handle_tab_rounded_pixel(30, 2), self.G.handle_tab_pixel(30, 2)):
+            self.assertAlmostEqual(a, b)
+
+    def test_rims_are_lit_from_the_top(self):
+        self.assertGreater(self.G.handle_capsule_pixel(5, 2)[0], self.G.handle_capsule_pixel(5, 253)[0])
+
+    def check_mode(self, mode):
         def write(path):
-            self.assertEqual(compose_gold_ring.main([mode, path]), 0)
+            self.assertEqual(self.G.main([mode, path]), 0)
 
-        self.assertEqual(png_info(render(write))[:4], size + (8, 6))
+        self.assertEqual(png_info(render(write))[:4], (64, 256, 8, 6))
 
-    def test_half_ring_mode_writes_a_128_by_256_rgba_png(self):
-        self.check_mode("--half-ring", (128, 256))
+    def test_handle_modes_write_64_by_256_rgba_pngs(self):
+        for mode in ("--handle-capsule", "--handle-capsule-mask", "--handle-tab", "--handle-tab-rounded"):
+            self.check_mode(mode)
 
-    def test_half_disc_mode_writes_a_128_by_256_rgba_png(self):
-        self.check_mode("--half-disc", (128, 256))
-
-    def test_half_ring_preview_mode_writes_an_rgba_png(self):
+    def test_handle_preview_mode_writes_an_rgba_png(self):
         def write(path):
-            self.assertEqual(compose_gold_ring.main(["--half-ring-preview", path]), 0)
+            self.assertEqual(self.G.main(["--handle-preview", path]), 0)
 
-        width, height, depth, color, _ = png_info(render(write))
-        self.assertEqual((depth, color), (8, 6))
-        self.assertGreater(width, 0)
-        self.assertGreater(height, 0)
+        self.assertEqual(png_info(render(write))[2:4], (8, 6))
 
-    def test_shipped_half_ring_matches_the_generator(self):
-        self.assertEqual(
-            png_info(render(compose_gold_ring.write_half_ring)),
-            png_info(shipped("half_ring_gold.png")),
-        )
-
-    def test_shipped_half_disc_matches_the_generator(self):
-        self.assertEqual(
-            png_info(render(compose_gold_ring.write_half_disc)),
-            png_info(shipped("half_disc_mask.png")),
-        )
-
+    def test_shipped_handle_art_matches_the_generator(self):
+        for write, name in (
+            (self.G.write_handle_capsule, "handle_capsule_gold.png"),
+            (self.G.write_handle_capsule_mask, "handle_capsule_mask.png"),
+            (self.G.write_handle_tab, "handle_tab_gold.png"),
+            (self.G.write_handle_tab_rounded, "handle_tab_gold_rounded.png"),
+        ):
+            self.assertEqual(png_info(render(write)), png_info(shipped(name)), name)
 
 if __name__ == "__main__":
     unittest.main()

@@ -199,6 +199,7 @@ function Surfaces.Create(options)
     end
     edgeSurface = ScreenEdgeSurface.Create(options.uiFactory, options.uiParent, {
       settings = settings,
+      looks = IconRuntime.LookGetters(settings),
       getSide = function()
         return EdgeWiring.Side(settings)
       end,

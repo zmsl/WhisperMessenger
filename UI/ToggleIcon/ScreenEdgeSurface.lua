@@ -10,11 +10,11 @@ local ScreenEdgeHandle = ns.ToggleIconScreenEdgeHandle or require("WhisperMessen
 -- counts; it lights the glow and shows the handle while the window is hidden.
 local ScreenEdgeSurface = {}
 
--- options: theme, settings, getSide(), isWindowShown(), onClick().
+-- options: theme, settings, looks (the Icons-page getters), getSide(), isWindowShown(), onClick().
 function ScreenEdgeSurface.Create(factory, parent, options)
   local settings = options.settings
   local glow = ScreenEdgeGlow.Create(factory, parent, { theme = options.theme })
-  local handle = ScreenEdgeHandle.Create(factory, parent, { theme = options.theme, onClick = options.onClick })
+  local handle = ScreenEdgeHandle.Create(factory, parent, { theme = options.theme, onClick = options.onClick, looks = options.looks })
   local surface = { glow = glow, handle = handle }
   surface.total, surface.whispers = 0, 0
 

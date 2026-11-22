@@ -5,9 +5,11 @@ Usage: python scripts/compose_gold_ring.py <ring.png> <preview.png>
        python scripts/compose_gold_ring.py --square-glow <glow.png>
        python scripts/compose_gold_ring.py --square-mask <mask.png>
        python scripts/compose_gold_ring.py --square-rounded <frame.png>
-       python scripts/compose_gold_ring.py --half-ring <rim.png>
-       python scripts/compose_gold_ring.py --half-disc <mask.png>
-       python scripts/compose_gold_ring.py --half-ring-preview <preview.png>
+       python scripts/compose_gold_ring.py --handle-capsule <rim.png>
+       python scripts/compose_gold_ring.py --handle-capsule-mask <mask.png>
+       python scripts/compose_gold_ring.py --handle-tab <rim.png>
+       python scripts/compose_gold_ring.py --handle-tab-rounded <rim.png>
+       python scripts/compose_gold_ring.py --handle-preview <preview.png>
 """
 import math
 import struct
@@ -134,16 +136,63 @@ def square_rounded_pixel(x, y, size):
     return r, g, b, a * clamp01(outer + 0.5)
 
 
-def half_ring_pixel(x, y, size):
-    """The ring's right half: flat side on x = 0, in a size / 2 x size image."""
-    return ring_pixel(x + size // 2, y, size)
+# The screen-edge handle: HANDLE_WIDTH x HANDLE_HEIGHT px in game, flat side on
+# the screen (x = 0). Drawn on a power-of-two canvas whose texels map to
+# display px unevenly, so the game's stretch to the handle size undoes it and
+# the band keeps one width in display px all along the edge.
+HANDLE_WIDTH, HANDLE_HEIGHT = 22, 104
+HANDLE_CANVAS_W, HANDLE_CANVAS_H = 64, 256
+HANDLE_CAPSULE_BAND = (1 - INNER) * HANDLE_WIDTH  # the ring's band at this radius
+HANDLE_TAB_BAND = SQUARE_BAND * 2 * HANDLE_WIDTH  # the square frame's band on a square that wide
+HANDLE_TAB_CORNER = CORNER_RATIO * 2 * HANDLE_WIDTH
 
 
-def half_disc_pixel(x, y, size):
-    """White half disc to mid-band of the half ring, anti-aliased: the fill under the rim."""
-    radius = (size / 2 - 1) * (1 + INNER) / 2
-    dist = math.hypot(x + 0.5, y + 0.5 - size / 2)
-    return 1.0, 1.0, 1.0, clamp01(radius - dist + 0.5)
+def handle_distance(x, y, corner, core):
+    """(inward distance in display px, light dx, light dy) for texel (x, y).
+
+    The shape is a rectangle mirrored about the flat side (so only its inner
+    corners round) with corner radius `corner`: HANDLE_WIDTH gives a half
+    capsule, a small radius the square tab. The light runs from the nearest
+    point of a vertical core `core` px either side of the middle: the capsule's
+    centre line (like the ring's from its centre), or 0 for the tab (like the
+    square frame's from its centre).
+    """
+    px = (x + 0.5) * HANDLE_WIDTH / HANDLE_CANVAS_W
+    py = (y + 0.5) * HANDLE_HEIGHT / HANDLE_CANVAS_H - HANDLE_HEIGHT / 2
+    qx = abs(px) - (HANDLE_WIDTH - corner)
+    qy = abs(py) - (HANDLE_HEIGHT / 2 - corner)
+    outside = math.hypot(max(qx, 0.0), max(qy, 0.0)) + min(max(qx, qy), 0.0) - corner
+    return -outside, px, py - max(-core, min(core, py))
+
+
+def handle_alpha(inward, inner):
+    """Coverage between the outer edge and `inner` px in, smoothed over one texel."""
+    aa = HANDLE_HEIGHT / HANDLE_CANVAS_H
+    return clamp01(inward / aa + 0.5) * clamp01((inner - inward) / aa + 0.5)
+
+
+def handle_rim(x, y, corner, band, core=0.0):
+    inward, lx, ly = handle_distance(x, y, corner, core)
+    color = apply_light(profile_color(inward / band), lx, ly)
+    return color[0], color[1], color[2], handle_alpha(inward, band)
+
+
+def handle_capsule_pixel(x, y, _size=None):
+    return handle_rim(x, y, HANDLE_WIDTH, HANDLE_CAPSULE_BAND, HANDLE_HEIGHT / 2 - HANDLE_WIDTH)
+
+
+def handle_capsule_mask_pixel(x, y, _size=None):
+    """White half capsule to mid-band: the fill under the rim."""
+    inward = handle_distance(x, y, HANDLE_WIDTH, 0.0)[0] - HANDLE_CAPSULE_BAND / 2
+    return 1.0, 1.0, 1.0, clamp01(inward / (HANDLE_HEIGHT / HANDLE_CANVAS_H) + 0.5)
+
+
+def handle_tab_pixel(x, y, _size=None):
+    return handle_rim(x, y, 0.0, HANDLE_TAB_BAND)
+
+
+def handle_tab_rounded_pixel(x, y, _size=None):
+    return handle_rim(x, y, HANDLE_TAB_CORNER, HANDLE_TAB_BAND)
 
 
 def paeth(left, up, up_left):
@@ -243,43 +292,61 @@ def write_square_rounded(path):
     write_art(path, square_rounded_pixel)
 
 
-def write_half_ring(path):
-    write_art(path, half_ring_pixel, SIZE, SIZE // 2)
+def write_handle(path, pixel):
+    write_art(path, pixel, HANDLE_CANVAS_H, HANDLE_CANVAS_W)
 
 
-def write_half_disc(path):
-    write_art(path, half_disc_pixel, SIZE, SIZE // 2)
+def write_handle_capsule(path):
+    write_handle(path, handle_capsule_pixel)
 
 
-def write_half_ring_preview(path, height=52, zoom=6, fill=(0.06, 0.06, 0.07), custom=(0.35, 0.35, 0.40)):
-    """The edge handle at size on a screen edge (flat side left), zoomed: the gold
-    Native HUD rim, then the custom look (rim desaturated and tinted as in game)."""
+def write_handle_capsule_mask(path):
+    write_handle(path, handle_capsule_mask_pixel)
+
+
+def write_handle_tab(path):
+    write_handle(path, handle_tab_pixel)
+
+
+def write_handle_tab_rounded(path):
+    write_handle(path, handle_tab_rounded_pixel)
+
+
+def write_handle_preview(path, zoom=4, fill=(0.06, 0.06, 0.07), themed=(0.25, 0.6, 1.0)):
+    """The handle at size on a screen edge, zoomed: capsule gold, capsule themed,
+    rounded tab gold, rounded tab themed (themed: desaturated x a stand-in accent)."""
     backdrop = (0.30, 0.34, 0.28)
     samples = 4
-    width = height // 2
-    gap = 8
-    canvas_w, canvas_h = 2 * width + gap + 4, height + 8
-    scale = SIZE / height
+    gap = 6
+    panels = [(handle_capsule_pixel, False), (handle_capsule_pixel, True), (handle_tab_rounded_pixel, False), (handle_tab_rounded_pixel, True)]
+    canvas_w = len(panels) * (HANDLE_WIDTH + gap) + gap
+    canvas_h = HANDLE_HEIGHT + 2 * gap
+    tab_inset = HANDLE_TAB_BAND / 2
     rows = []
     for py in range(canvas_h):
         row = []
         for px in range(canvas_w):
-            panel = 0 if px < width + gap // 2 + 2 else 1
-            left = 2 if panel == 0 else width + gap + 2
+            panel, local_x = divmod(px - gap, HANDLE_WIDTH + gap)
             total = [0.0, 0.0, 0.0]
             for sy in range(samples):
                 for sx in range(samples):
-                    x = (px - left + (sx + 0.5) / samples) * scale
-                    y = (py - 4 + (sy + 0.5) / samples) * scale
+                    dx = local_x + (sx + 0.5) / samples
+                    dy = py - gap + (sy + 0.5) / samples
                     color = list(backdrop)
-                    if 0 <= x < SIZE // 2 and 0 <= y < SIZE:
-                        _, _, _, fa = half_disc_pixel(x - 0.5, y - 0.5, SIZE)
+                    if 0 <= panel < len(panels) and 0 <= dx < HANDLE_WIDTH and 0 <= dy < HANDLE_HEIGHT:
+                        pixel, tinted = panels[panel]
+                        tx = dx * HANDLE_CANVAS_W / HANDLE_WIDTH - 0.5
+                        ty = dy * HANDLE_CANVAS_H / HANDLE_HEIGHT - 0.5
+                        if pixel is handle_capsule_pixel:
+                            fa = handle_capsule_mask_pixel(tx, ty)[3]
+                        else:  # the tab's fill is a plain texture inset by half the band
+                            fa = 1.0 if dx < HANDLE_WIDTH - tab_inset and tab_inset <= dy < HANDLE_HEIGHT - tab_inset else 0.0
                         color = [b + (f - b) * fa for b, f in zip(color, fill)]
-                        r, g, b, a = half_ring_pixel(x - 0.5, y - 0.5, SIZE)
+                        r, g, b, a = pixel(tx, ty)
                         rim = [r, g, b]
-                        if panel == 1:
+                        if tinted:
                             grey = 0.299 * r + 0.587 * g + 0.114 * b
-                            rim = [grey * t for t in custom]
+                            rim = [grey * t for t in themed]
                         color = [c + (m - c) * a for c, m in zip(color, rim)]
                     for i in range(3):
                         total[i] += color[i]
@@ -335,9 +402,11 @@ ART_MODES = {
     "--square-glow": write_square_glow,
     "--square-mask": write_square_mask,
     "--square-rounded": write_square_rounded,
-    "--half-ring": write_half_ring,
-    "--half-disc": write_half_disc,
-    "--half-ring-preview": write_half_ring_preview,
+    "--handle-capsule": write_handle_capsule,
+    "--handle-capsule-mask": write_handle_capsule_mask,
+    "--handle-tab": write_handle_tab,
+    "--handle-tab-rounded": write_handle_tab_rounded,
+    "--handle-preview": write_handle_preview,
 }
 
 

@@ -48,15 +48,9 @@ local Layout = {
   SCREEN_EDGE_SHADE_WIDTH = 14,
   SCREEN_EDGE_GLOW_DEPTH = 48,
   SCREEN_EDGE_GLOW_CYCLE_SECONDS = 3,
-  -- The edge handle is a half disc: width = radius, height = diameter.
-  SCREEN_EDGE_HANDLE_WIDTH = 26,
-  SCREEN_EDGE_HANDLE_HEIGHT = 52,
-  SCREEN_EDGE_HANDLE_ICON_SIZE = 16,
-  -- Icon centre in from the flat side: the half disc's centroid, 4r / 3pi.
-  SCREEN_EDGE_HANDLE_ICON_INSET = 11,
-  -- Badge centre: 45 degrees up the curve, r * 0.7 in and up from the edge's midpoint.
-  SCREEN_EDGE_HANDLE_BADGE_OFFSET = 18,
-  SCREEN_EDGE_HANDLE_BADGE_SIZE = 18,
+  -- The edge handle's art is drawn at this size (scripts/compose_gold_ring.py HANDLE_*).
+  SCREEN_EDGE_HANDLE_WIDTH = 22,
+  SCREEN_EDGE_HANDLE_HEIGHT = 104,
   -- Docked Native HUD title row: buttons centred in it, then a gap and the
   -- inset bevel divider (its atlas is 3 px tall); the content starts below.
   SCREEN_EDGE_TITLE_ROW_HEIGHT = 26,

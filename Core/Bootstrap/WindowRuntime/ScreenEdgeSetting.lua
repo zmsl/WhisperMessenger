@@ -7,7 +7,17 @@ end
 -- ensureSurface(), updateIconSurfaces(), readCompactSlot().
 local ScreenEdgeSetting = {}
 
-local KEYS = { screenEdge = true, edgeGlow = true, edgeHandle = true }
+-- The Icons-page look keys repaint the handle, which wears the button's look.
+local KEYS = {
+  screenEdge = true,
+  edgeGlow = true,
+  edgeHandle = true,
+  widgetShape = true,
+  iconBorder = true,
+  iconBackground = true,
+  iconBorderThemed = true,
+  widgetTransparency = true,
+}
 
 function ScreenEdgeSetting.Apply(ctx, key, _value)
   if not KEYS[key] then
