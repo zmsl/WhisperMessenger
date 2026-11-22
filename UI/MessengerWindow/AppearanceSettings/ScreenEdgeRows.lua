@@ -60,6 +60,9 @@ local function createGlowColor(sel, panel, config, onChange)
       set(CUSTOM, { r, g, b })
     end, function()
       local restore = before
+      if not restore then
+        return -- already cancelled
+      end
       before = nil
       set(restore.edgeGlowColor, restore.edgeGlowCustom)
     end)
