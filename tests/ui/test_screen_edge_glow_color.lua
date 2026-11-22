@@ -50,7 +50,7 @@ return function()
 
   -- test_custom_paints_the_stored_rgb
   do
-    local surface = build({ edgeGlowColor = "custom", edgeGlowCustom = { r = 0.25, g = 0.5, b = 0.75 } })
+    local surface = build({ edgeGlowColor = "custom", edgeGlowCustom = { 0.25, 0.5, 0.75 } })
     assertRgb(surface, { 0.25, 0.5, 0.75 }, "custom")
   end
 
@@ -66,7 +66,7 @@ return function()
     local surface = build()
     surface.refreshTheme(other)
     assertRgb(surface, other.COLORS.accent, "unset follows the theme")
-    local chosen, settings = build({ edgeGlowColor = "custom", edgeGlowCustom = { r = 1, g = 0, b = 0 } })
+    local chosen, settings = build({ edgeGlowColor = "custom", edgeGlowCustom = { 1, 0, 0 } })
     chosen.refreshTheme(other)
     assertRgb(chosen, { 1, 0, 0 }, "custom stays")
     settings.edgeGlowColor = nil

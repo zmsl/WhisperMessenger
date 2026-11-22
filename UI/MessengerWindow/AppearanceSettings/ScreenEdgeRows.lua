@@ -31,7 +31,7 @@ local function createGlowColor(sel, panel, config, onChange)
   local function paintSwatch()
     local c = saved.edgeGlowCustom
     if type(c) == "table" then
-      swatch:SetColorTexture(c.r, c.g, c.b, 1)
+      swatch:SetColorTexture(c[1], c[2], c[3], 1)
       swatch:Show()
     else
       swatch:Hide()
@@ -50,7 +50,7 @@ local function createGlowColor(sel, panel, config, onChange)
     local before = { edgeGlowColor = saved.edgeGlowColor, edgeGlowCustom = saved.edgeGlowCustom }
     local c = ScreenEdgeGlow.ResolveColor(saved, Theme)
     local opened = ColorPicker.Open(c[1], c[2], c[3], function(r, g, b)
-      set(CUSTOM, { r = r, g = g, b = b })
+      set(CUSTOM, { r, g, b })
     end, function()
       set(before.edgeGlowColor, before.edgeGlowCustom)
     end)

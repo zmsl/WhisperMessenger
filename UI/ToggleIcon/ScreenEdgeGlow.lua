@@ -15,13 +15,13 @@ local ScreenEdgeGlow = {}
 
 ScreenEdgeGlow.TEXTURE = "Interface\\AddOns\\WhisperMessenger\\Media\\edge-glow.png"
 
--- settings.edgeGlowColor: "custom" (edgeGlowCustom = { r, g, b }), a theme
+-- settings.edgeGlowColor: "custom" (edgeGlowCustom = { r, g, b }, 0-1), a theme
 -- preset key (that preset's accent), or nil / unknown: the active accent.
 function ScreenEdgeGlow.ResolveColor(settings, activeTheme)
   local choice = settings.edgeGlowColor
   local custom = settings.edgeGlowCustom
   if choice == "custom" and type(custom) == "table" then
-    return { custom.r, custom.g, custom.b, 1 }
+    return { custom[1], custom[2], custom[3], 1 }
   end
   local preset = choice ~= nil and choice ~= "custom" and Presets.Get(choice)
   return preset and preset.accent or activeTheme.COLORS.accent

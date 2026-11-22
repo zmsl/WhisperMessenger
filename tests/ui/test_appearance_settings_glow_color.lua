@@ -106,7 +106,7 @@ return function()
     info.swatchFunc()
     assert(lastChange(changes, "edgeGlowColor").value == "custom", "custom saved")
     local rgb = lastChange(changes, "edgeGlowCustom").value
-    assert(rgb.r == 0.2 and rgb.g == 0.4 and rgb.b == 0.6, "rgb saved")
+    assert(rgb[1] == 0.2 and rgb[2] == 0.4 and rgb[3] == 0.6, "rgb saved as { r, g, b }")
     local c = custom.swatch.color
     assert(custom.swatch.shown ~= false and c[1] == 0.2 and c[3] == 0.6, "the swatch shows it")
     assert(selectedKey(result) == "custom", "Custom picked")
@@ -125,9 +125,24 @@ return function()
     assert(selectedKey(result) == "jade_dark", "selection back")
   end)
 
+  -- test_a_swatch_call_during_setup_still_cancels_back_to_nothing_saved
+  withPicker(function(picker)
+    function picker:SetupColorPickerAndShow(info)
+      self.info = info
+      self.rgb = { info.r, info.g, info.b }
+      info.swatchFunc()
+    end
+    local result, changes = create()
+    local custom = customButton(result)
+    custom.scripts.OnClick(custom)
+    picker.info.cancelFunc({ r = 0, g = 0, b = 0 })
+    assert(lastChange(changes, "edgeGlowColor").value == nil and lastChange(changes, "edgeGlowCustom").value == nil, "both back to nil")
+    assert(selectedKey(result) == Theme.GetPreset(), "the active preset shows again")
+  end)
+
   -- test_saved_custom_colour_shows_on_the_swatch_and_seeds_the_picker
   withPicker(function(picker)
-    local result = create({ edgeGlowColor = "custom", edgeGlowCustom = { r = 0.3, g = 0.2, b = 0.1 } })
+    local result = create({ edgeGlowColor = "custom", edgeGlowCustom = { 0.3, 0.2, 0.1 } })
     local custom = customButton(result)
     assert(custom.swatch.color[1] == 0.3 and custom.swatch.shown ~= false, "swatch painted")
     custom.scripts.OnClick(custom)
@@ -136,7 +151,7 @@ return function()
 
   -- test_reset_clears_both_keys
   do
-    local result, changes = create({ edgeGlowColor = "custom", edgeGlowCustom = { r = 1, g = 1, b = 1 } })
+    local result, changes = create({ edgeGlowColor = "custom", edgeGlowCustom = { 1, 1, 1 } })
     local reset = FindUI.byLabel(result.frame, "Reset to Defaults")
     reset.scripts.OnClick(reset)
     local color, custom = lastChange(changes, "edgeGlowColor"), lastChange(changes, "edgeGlowCustom")
